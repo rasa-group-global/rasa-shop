@@ -69,6 +69,9 @@ WP plugin install wordfence --activate || true
 echo "▸ Install TranslatePress (multilingual DE/EN)..."
 WP plugin install translatepress-multilingual --activate || true
 
+echo "▸ Install Revolut Gateway for WooCommerce..."
+WP plugin install revolut-gateway-for-woocommerce --activate || true
+
 echo "▸ WooCommerce settings (IDR)..."
 WP option update woocommerce_currency 'IDR'
 WP option update woocommerce_currency_pos 'left'

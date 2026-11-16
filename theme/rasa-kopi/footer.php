@@ -129,7 +129,8 @@ $legal_menu  = rasa_footer_menu_items( 'footer-legal' );
 	</div>
 </div>
 
-<div id="RasaCartDrawer" class="drawer rasa-cart-drawer color-scheme-1 gradient" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( rasa_tr( 'Dein Warenkorb', 'Your Cart' ) ); ?>" aria-hidden="true">
+<?php $rasa_initial_cart = function_exists('rasa_cart_payload') ? rasa_cart_payload() : array(); ?>
+<div id="RasaCartDrawer" class="drawer rasa-cart-drawer color-scheme-1 gradient" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( rasa_tr( 'Dein Warenkorb', 'Your Cart' ) ); ?>" aria-hidden="true" data-empty="<?php echo esc_attr( rasa_tr( 'Dein Warenkorb ist leer.', 'Your cart is empty.' ) ); ?>" data-loading="<?php echo esc_attr( rasa_tr( 'Warenkorb wird geladen…', 'Loading cart…' ) ); ?>" data-free-reached="<?php echo esc_attr( rasa_tr( '✓ Dein Versand ist <strong>kostenlos</strong>', '✓ Your shipping is <strong>free</strong>' ) ); ?>" data-free-left="<?php echo esc_attr( rasa_tr( 'Noch <strong>%s</strong> bis zum kostenlosen Versand', 'Only <strong>%s</strong> away from free shipping' ) ); ?>" data-initial-cart="<?php echo esc_attr( wp_json_encode( $rasa_initial_cart ) ); ?>">
 	<div class="cart-drawer__overlay" data-rasa-drawer-close></div>
 	<div class="drawer__inner" role="document">
 		<div class="drawer__header">
@@ -138,8 +139,9 @@ $legal_menu  = rasa_footer_menu_items( 'footer-legal' );
 				<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" class="icon icon-close" fill="none" viewBox="0 0 18 17" width="18" height="17"><path d="M.865 15.978a.5.5 0 00.707.707l7.433-7.431 7.579 7.282a.501.501 0 00.846-.37.5.5 0 00-.153-.351L9.712 8.546l7.417-7.416a.5.5 0 10-.707-.708L8.991 7.853 1.413.573a.5.5 0 10-.693.72l7.563 7.268-7.418 7.417z" fill="currentColor"/></svg>
 			</button>
 		</div>
-		<div class="rasa-cart-drawer__shipping" id="RasaCartShipping">
-			<?php echo esc_html( rasa_tr( 'Kostenloser Versand ab 59 € in Deutschland', 'Free shipping over €59 in Germany' ) ); ?>
+		<div class="rasa-free-shipping-box rasa-free-shipping-box--drawer" id="RasaCartShipping">
+			<div class="rasa-free-shipping-text" id="RasaCartDrawerShipText"><?php echo esc_html( rasa_tr( 'Kostenloser Versand ab 59 € in Deutschland', 'Free shipping over €59 in Germany' ) ); ?></div>
+			<div class="rasa-free-shipping-bar"><span id="RasaCartDrawerShipBar" style="width:0%;"></span></div>
 		</div>
 		<div class="drawer__contents rasa-cart-drawer__body" id="RasaCartDrawerBody"></div>
 		<div class="drawer__footer" id="RasaCartDrawerFooter" hidden>
@@ -148,13 +150,25 @@ $legal_menu  = rasa_footer_menu_items( 'footer-legal' );
 					<h2 class="totals__total"><?php echo esc_html( rasa_tr( 'Geschätzte Gesamtkosten', 'Estimated total' ) ); ?></h2>
 					<p class="totals__total-value" id="RasaCartSubtotal"></p>
 				</div>
-				<small class="tax-note caption-large rte"><?php echo esc_html( rasa_tr( 'Inkl. MwSt. Rabatte und Versand werden beim Checkout berechnet.', 'Incl. VAT. Discounts and shipping calculated at checkout.' ) ); ?></small>
+				<small class="tax-note caption-large rte"><?php echo esc_html( rasa_tr( 'Inkl. Steuern. Rabatte und Versand werden beim Checkout berechnet.', 'Taxes included. Discounts and shipping calculated at checkout.' ) ); ?></small>
 			</div>
 			<div class="cart__ctas">
 				<a href="<?php echo esc_url( function_exists( 'wc_get_checkout_url' ) ? wc_get_checkout_url() : home_url( '/checkout/' ) ); ?>" class="cart__checkout-button button button--primary" id="RasaCartCheckoutBtn">
 					<?php echo esc_html( rasa_tr( 'Auschecken', 'Checkout' ) ); ?>
 				</a>
 			</div>
+			<div class="rasa-cart-trust">
+				<span>🔒 <?php echo esc_html( rasa_tr( 'Sichere Bezahlung', 'Secure payment' ) ); ?></span>
+				<span>·</span>
+				<span>🚚 <?php echo esc_html( rasa_tr( 'Lieferung in 3–7 Werktagen', 'Delivery in 3–7 business days' ) ); ?></span>
+			</div>
+			<?php if ( ! empty( $payment_icons ) ) : ?>
+			<ul class="list list-payment rasa-cart-payments" role="list">
+				<?php foreach ( $payment_icons as $svg ) : ?>
+				<li class="list-payment__item"><?php echo $svg; // phpcs:ignore WordPress.Security.EscapeOutput ?></li>
+				<?php endforeach; ?>
+			</ul>
+			<?php endif; ?>
 		</div>
 	</div>
 </div>

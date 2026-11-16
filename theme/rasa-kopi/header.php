@@ -9,7 +9,7 @@ $cart_count = rasa_cart_count();
 $announcements = rasa_announcements();
 ?>
 <!doctype html>
-<html <?php language_attributes(); ?>>
+<html class="js" <?php language_attributes(); ?>>
 <head>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -164,9 +164,10 @@ $announcements = rasa_announcements();
 	<header class="header header--middle-center header--mobile-center page-width header--has-menu header--has-account header--has-localizations">
 
 		<!-- Mobile Drawer (< 990px) -->
+		<?php $cur_lang = function_exists( 'rasa_current_lang' ) ? rasa_current_lang() : 'de'; ?>
 		<header-drawer data-breakpoint="tablet">
 			<details id="Details-menu-drawer-container" class="menu-drawer-container">
-				<summary class="header__icon header__icon--menu header__icon--summary link focus-inset" aria-label="<?php esc_attr_e( 'Menü', 'rasa-kopi' ); ?>">
+				<summary class="header__icon header__icon--menu header__icon--summary link focus-inset" aria-label="<?php echo esc_attr( rasa_tr( 'Menü', 'Menu' ) ); ?>">
 					<span>
 						<?php echo rasa_icon_raw( 'hamburger' ); ?>
 						<?php echo rasa_icon_raw( 'close' ); ?>
@@ -179,13 +180,60 @@ $announcements = rasa_announcements();
 								<ul class="menu-drawer__menu has-submenu list-menu" role="list">
 									<?php foreach ( rasa_main_menu_items() as $link ) : ?>
 									<li>
+										<?php if ( ! empty( $link['children'] ) ) : ?>
+										<details id="Details-menu-drawer-menu-item-<?php echo esc_attr( sanitize_title( $link['title'] ) ); ?>">
+											<summary id="HeaderDrawer-<?php echo esc_attr( sanitize_title( $link['title'] ) ); ?>" class="menu-drawer__menu-item list-menu__item link link--text focus-inset<?php echo ! empty( $link['current'] ) ? ' menu-drawer__menu-item--active' : ''; ?>">
+												<?php echo esc_html( $link['title'] ); ?>
+												<?php echo rasa_icon( 'arrow', 'svg-wrapper' ); ?>
+											</summary>
+											<div id="link-<?php echo esc_attr( sanitize_title( $link['title'] ) ); ?>" class="menu-drawer__submenu has-submenu gradient motion-reduce" tabindex="-1">
+												<div class="menu-drawer__inner-submenu">
+													<button class="menu-drawer__close-button link link--text focus-inset" aria-expanded="true">
+														<?php echo rasa_icon( 'arrow', 'svg-wrapper' ); ?>
+														<?php echo esc_html( $link['title'] ); ?>
+													</button>
+													<ul class="menu-drawer__menu list-menu" role="list" tabindex="-1">
+														<?php foreach ( $link['children'] as $child ) : ?>
+														<li>
+															<a href="<?php echo esc_url( $child['url'] ); ?>" class="menu-drawer__menu-item link link--text list-menu__item focus-inset<?php echo ! empty( $child['current'] ) ? ' menu-drawer__menu-item--active' : ''; ?>">
+																<?php echo esc_html( $child['title'] ); ?>
+															</a>
+														</li>
+														<?php endforeach; ?>
+													</ul>
+												</div>
+											</div>
+										</details>
+										<?php else : ?>
 										<a href="<?php echo esc_url( $link['url'] ); ?>" class="menu-drawer__menu-item list-menu__item link link--text focus-inset<?php echo ! empty( $link['current'] ) ? ' menu-drawer__menu-item--active' : ''; ?>">
 											<?php echo esc_html( $link['title'] ); ?>
 										</a>
+										<?php endif; ?>
 									</li>
 									<?php endforeach; ?>
 								</ul>
 							</nav>
+							<div class="menu-drawer__utility-links">
+								<a href="<?php echo esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ) ); ?>" class="menu-drawer__account link focus-inset h5 medium-hide large-up-hide">
+									<span class="svg-wrapper"><?php echo rasa_icon_raw( 'account' ); ?></span>
+									<?php echo esc_html( is_user_logged_in() ? rasa_tr( 'Konto', 'Account' ) : rasa_tr( 'Anmelden', 'Log in' ) ); ?>
+								</a>
+								<div class="menu-drawer__localization header-localization">
+									<form method="post" action="<?php echo esc_url( home_url( '/' ) ); ?>" id="HeaderDrawerLanguageForm" class="localization-form">
+										<input type="hidden" name="locale_code" value="<?php echo esc_attr( $cur_lang ); ?>" />
+										<div style="display:flex;gap:1.4rem;padding:1.4rem 0 0;align-items:center;">
+											<a href="#" class="link link--text caption-large" data-rasa-lang="de" style="display:inline-flex;align-items:center;gap:.6rem;font-weight:<?php echo $cur_lang === 'de' ? '700' : '400'; ?>;text-decoration:<?php echo $cur_lang === 'de' ? 'underline' : 'none'; ?>;">
+												<span class="rasa-flag" aria-hidden="true" style="display:inline-flex;align-items:center;line-height:0"><svg viewBox="0 0 5 3" width="20" height="14" style="width:2rem;height:1.4rem;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.15);display:block"><rect width="5" height="1" fill="#000"/><rect y="1" width="5" height="1" fill="#DD0000"/><rect y="2" width="5" height="1" fill="#FFCE00"/></svg></span>
+												Deutsch
+											</a>
+											<a href="#" class="link link--text caption-large" data-rasa-lang="en" style="display:inline-flex;align-items:center;gap:.6rem;font-weight:<?php echo $cur_lang === 'en' ? '700' : '400'; ?>;text-decoration:<?php echo $cur_lang === 'en' ? 'underline' : 'none'; ?>;">
+												<span class="rasa-flag" aria-hidden="true" style="display:inline-flex;align-items:center;line-height:0"><svg viewBox="0 0 60 30" width="20" height="14" style="width:2rem;height:1.4rem;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.15);display:block"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></svg></span>
+												English
+											</a>
+										</div>
+									</form>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

@@ -5,6 +5,12 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 get_header();
+
+if ( function_exists( 'is_cart' ) && is_cart() && file_exists( RASA_DIR . '/woocommerce/cart/cart.php' ) ) {
+	include RASA_DIR . '/woocommerce/cart/cart.php';
+	get_footer();
+	return;
+}
 ?>
 <div class="rasa-page-wrap color-scheme-1 gradient" style="padding: 36px 0 64px;">
 	<div class="page-width">

@@ -198,7 +198,18 @@ body.rasa-lang-en .card-information .price::after {
 	visibility: hidden;
 	pointer-events: none;
 	opacity: 0;
+	z-index: 100000 !important;
 	transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+body.admin-bar .rasa-cart-drawer {
+	top: 32px;
+	height: calc(100% - 32px);
+}
+@media screen and (max-width: 782px) {
+	body.admin-bar .rasa-cart-drawer {
+		top: 46px;
+		height: calc(100% - 46px);
+	}
 }
 .rasa-cart-drawer.active {
 	visibility: visible;
@@ -358,4 +369,158 @@ body:not(.woocommerce-checkout):not(.woocommerce-account) .woocommerce-notices-w
 body:not(.woocommerce-checkout):not(.woocommerce-account) .woocommerce-message,
 body:not(.woocommerce-checkout):not(.woocommerce-account) .woocommerce-info {
 	display: none !important;
+}
+
+/* ===== Dawn /cart Page & Free Shipping Box (match live storefront 1:1) ===== */
+.rasa-free-shipping-box {
+	border: 1px solid rgba(18, 18, 18, 0.14);
+	background: rgba(18, 18, 18, 0.03);
+	padding: 1.2rem 1.4rem;
+	margin-bottom: 1.8rem;
+}
+.rasa-free-shipping-box--drawer {
+	margin-top: 0.4rem;
+	margin-bottom: 1.2rem;
+}
+.rasa-free-shipping-text {
+	font-size: 1.35rem;
+	line-height: 1.4;
+	color: #000;
+}
+.rasa-free-shipping-bar {
+	width: 100%;
+	height: 4px;
+	background: rgba(18, 18, 18, 0.12);
+	border-radius: 99px;
+	overflow: hidden;
+	margin-top: 0.9rem;
+}
+.rasa-free-shipping-bar > span {
+	display: block;
+	height: 100%;
+	background: #a67458;
+	border-radius: 99px;
+	transition: width 0.3s ease;
+}
+.rasa-cart-page__qty {
+	display: inline-flex;
+	align-items: center;
+	border: 1px solid rgba(0, 0, 0, 0.55);
+	background: #f3f3f3;
+	height: 4.5rem;
+	width: 14rem;
+	justify-content: space-between;
+}
+.rasa-cart-page__qty button {
+	width: 4.4rem;
+	height: 100%;
+	border: 0;
+	background: transparent;
+	font-size: 1.8rem;
+	cursor: pointer;
+	color: #000;
+}
+.rasa-cart-page__qty span {
+	font-size: 1.4rem;
+	color: #000;
+	text-align: center;
+	min-width: 2.4rem;
+}
+.rasa-cart-page__remove {
+	border: 0;
+	background: transparent;
+	padding: 0.8rem;
+	cursor: pointer;
+	color: rgba(0, 0, 0, 0.65);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+.rasa-cart-page__remove:hover {
+	color: #000;
+}
+.rasa-cart-trust {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.8rem;
+	font-size: 1.2rem;
+	color: rgba(18, 18, 18, 0.72);
+	margin-top: 1.4rem;
+	flex-wrap: wrap;
+}
+.rasa-cart-payments {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 1.2rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+.rasa-cart-payments .list-payment__item {
+	padding: 0;
+}
+@media screen and (max-width: 749px) {
+	.rasa-cart-page .cart-items thead {
+		display: none;
+	}
+	.rasa-cart-page .cart-item {
+		display: grid;
+		grid-template-columns: 9rem 1fr auto;
+		gap: 1.2rem;
+		padding: 1.8rem 0;
+	}
+	.rasa-cart-page .cart-item td {
+		padding: 0 !important;
+		border: 0 !important;
+	}
+	.rasa-cart-page .cart-item__quantity {
+		grid-column: 2 / -1;
+		width: auto !important;
+		margin-top: 1rem;
+	}
+}
+
+/* ===== Mobile Responsive & Burger Menu Drawer Fixes ===== */
+html, body {
+	overflow-x: clip;
+	max-width: 100%;
+}
+.js details#Details-menu-drawer-container[open].menu-opening > #menu-drawer,
+details#Details-menu-drawer-container[open] > #menu-drawer {
+	min-height: calc(100dvh - var(--header-bottom-position, 8rem));
+	height: calc(100dvh - var(--header-bottom-position, 8rem));
+	z-index: 99990;
+}
+.js details#Details-menu-drawer-container[open].menu-opening > #menu-drawer {
+	transform: translateX(0);
+	visibility: visible;
+}
+.menu-drawer__account {
+	display: inline-flex !important;
+	align-items: center;
+	gap: 0.8rem;
+	text-decoration: none;
+	font-size: 1.5rem;
+	color: inherit;
+	margin: 0;
+	padding: 0;
+}
+.menu-drawer__account .svg-wrapper {
+	width: 2rem;
+	height: 2rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+@media screen and (max-width: 749px) {
+	.section-main-product .product__title h1 {
+		font-size: 2.8rem !important;
+		line-height: 3.6rem !important;
+	}
+	.facets-wrapper .facets__form {
+		flex-wrap: wrap !important;
+		gap: 0.8rem 1.2rem !important;
+	}
 }

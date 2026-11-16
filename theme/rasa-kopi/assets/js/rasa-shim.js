@@ -3,6 +3,8 @@
  * Dipakai: StandardEvents (parse-time di cart.js), routes, strings.
  * ------------------------------------------------------------------ */
 (function () {
+	document.documentElement.classList.add('js');
+
 	// Dawn import StandardEvents dari CDN Shopify (module). Di Woo tidak ada,
 	// jadi kita sediakan class stub yang behavior-nya no-op tapi struktur sama.
 	if (!window.StandardEvents) {
@@ -136,11 +138,27 @@
 		var cfg = window.RasaTheme || {};
 		if (!drawer || !bodyEl) return;
 
+		function getEndpoint(action) {
+			var liveCfg = window.RasaTheme || cfg;
+			if (liveCfg.wcAjaxUrl) {
+				return liveCfg.wcAjaxUrl.replace('%%endpoint%%', action);
+			}
+			return '/?wc-ajax=' + encodeURIComponent(action);
+		}
+
 		function esc(s) {
 			return String(s || '').replace(/[&<>"']/g, function (c) {
 				return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
 			});
 		}
+
+		var emptyText = drawer.getAttribute('data-empty') || 'Dein Warenkorb ist leer.';
+		var loadingText = drawer.getAttribute('data-loading') || 'Warenkorb wird geladen…';
+		var cachedCart = null;
+		try {
+			var rawInit = drawer.getAttribute('data-initial-cart');
+			if (rawInit) cachedCart = JSON.parse(rawInit);
+		} catch (err) {}
 
 		function updateHeaderBubble(count) {
 			var bubbleWrap = document.getElementById('cart-icon-bubble');
@@ -160,13 +178,83 @@
 			}
 		}
 
+		function formatEurShort(num) {
+			return '€' + Number(num || 0).toFixed(2).replace('.', ',');
+		}
+
+		function updateFreeShipping(boxTextEl, boxBarEl, holderEl, subtotalNum) {
+			if (!boxTextEl || !boxBarEl || !holderEl) return;
+			var threshold = 59;
+			var left = Math.max(0, threshold - Number(subtotalNum || 0));
+			var pct = Math.min(100, Math.round((Number(subtotalNum || 0) / threshold) * 100));
+			var reachedTpl = holderEl.getAttribute('data-free-reached') || '✓ Dein Versand ist <strong>kostenlos</strong>';
+			var leftTpl = holderEl.getAttribute('data-free-left') || 'Noch <strong>%s</strong> bis zum kostenlosen Versand';
+			boxTextEl.innerHTML = left <= 0 ? reachedTpl : leftTpl.replace('%s', formatEurShort(left));
+			boxBarEl.style.width = pct + '%';
+		}
+
+		function syncCartPage(data) {
+			var pageEl = document.getElementById('RasaCartPage');
+			if (!pageEl || !data) return;
+			var emptyEl = document.getElementById('RasaCartPageEmpty');
+			var filledEl = document.getElementById('RasaCartPageFilled');
+			var tbodyEl = document.getElementById('RasaCartPageTbody');
+			var pageSubtotalEl = document.getElementById('RasaCartPageSubtotal');
+			var shipTextEl = document.getElementById('RasaCartPageShipText');
+			var shipBarEl = document.getElementById('RasaCartPageShipBar');
+			var items = data.items || [];
+
+			if (!items.length) {
+				pageEl.classList.add('is-empty');
+				if (emptyEl) emptyEl.hidden = false;
+				if (filledEl) filledEl.hidden = true;
+				return;
+			}
+			pageEl.classList.remove('is-empty');
+			if (emptyEl) emptyEl.hidden = true;
+			if (filledEl) filledEl.hidden = false;
+
+			if (tbodyEl) {
+				tbodyEl.innerHTML = items.map(function (it) {
+					return '<tr class="cart-item" data-key="' + esc(it.key) + '" style="border-bottom:1px solid rgba(18,18,18,0.06);">'
+						+ '<td class="cart-item__media" style="width:12rem;padding:2.4rem 2.4rem 2.4rem 0;vertical-align:top;">'
+						+ '<a href="' + esc(it.url) + '" style="display:block;width:10rem;background:#efeee9;">'
+						+ (it.image ? '<img src="' + esc(it.image) + '" alt="' + esc(it.name) + '" class="cart-item__image" width="100" height="120" style="width:10rem;height:12rem;object-fit:cover;display:block;">' : '')
+						+ '</a></td>'
+						+ '<td class="cart-item__details" style="padding:2.4rem 2rem 2.4rem 0;vertical-align:top;">'
+						+ '<a href="' + esc(it.url) + '" class="cart-item__name h4 break" style="font-size:1.5rem;font-weight:400;color:#000;text-decoration:none;display:block;margin-bottom:.6rem;">' + esc(it.name) + '</a>'
+						+ '<div class="product-option" style="font-size:1.4rem;color:rgba(18,18,18,0.75);margin-bottom:.4rem;">' + esc(it.unit_price || '') + '</div>'
+						+ (it.variation ? '<div class="product-option" style="font-size:1.4rem;color:rgba(18,18,18,0.75);">' + esc(it.variation) + '</div>' : '')
+						+ '</td>'
+						+ '<td class="cart-item__quantity" style="padding:2.4rem 2rem 2.4rem 0;vertical-align:top;width:24rem;">'
+						+ '<div class="cart-item__quantity-wrapper" style="display:flex;align-items:center;gap:1.2rem;">'
+						+ '<div class="rasa-cart-page__qty">'
+						+ '<button type="button" data-rasa-page-qty="' + (it.qty - 1) + '" aria-label="-">−</button>'
+						+ '<span>' + it.qty + '</span>'
+						+ '<button type="button" data-rasa-page-qty="' + (it.qty + 1) + '" aria-label="+">+</button>'
+						+ '</div>'
+						+ '<button type="button" class="rasa-cart-page__remove" data-rasa-page-qty="0" aria-label="Remove">'
+						+ '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" width="16" height="16" fill="currentColor"><path d="M14 3h-3.53a3.07 3.07 0 00-.6-1.65C9.44.82 8.8.5 8 .5s-1.44.32-1.87.85A3.06 3.06 0 005.53 3H2a.5.5 0 000 1h1.25v10c0 .28.22.5.5.5h8.5a.5.5 0 00.5-.5V4H14a.5.5 0 000-1zM6.91 1.98c.23-.29.58-.48 1.09-.48s.85.19 1.09.48c.2.24.3.6.36 1.02h-2.9c.05-.42.17-.78.36-1.02zm4.84 11.52h-7.5V4h7.5v9.5z"/><path d="M6.55 5.25a.5.5 0 00-.5.5v6a.5.5 0 001 0v-6a.5.5 0 00-.5-.5zM9.45 5.25a.5.5 0 00-.5.5v6a.5.5 0 001 0v-6a.5.5 0 00-.5-.5z"/></svg>'
+						+ '</button></div></td>'
+						+ '<td class="cart-item__totals right" style="padding:2.4rem 0;vertical-align:top;text-align:right;white-space:nowrap;">'
+						+ '<span class="price price--end" style="font-size:1.6rem;color:#000;">' + esc(it.line_total) + '</span>'
+						+ '</td></tr>';
+				}).join('');
+			}
+			if (pageSubtotalEl) pageSubtotalEl.textContent = data.subtotal || '';
+			updateFreeShipping(shipTextEl, shipBarEl, pageEl, data.subtotal_num || 0);
+		}
+
 		function renderCart(data) {
 			if (!data) return;
+			cachedCart = data;
 			updateHeaderBubble(data.count || 0);
+			syncCartPage(data);
+			updateFreeShipping(document.getElementById('RasaCartDrawerShipText'), document.getElementById('RasaCartDrawerShipBar'), drawer, data.subtotal_num || 0);
 			if (checkoutBtn && data.checkoutUrl) checkoutBtn.href = data.checkoutUrl;
 			var items = data.items || [];
 			if (!items.length) {
-				bodyEl.innerHTML = '<div class="rasa-cart-drawer__empty">Dein Warenkorb ist leer.</div>';
+				bodyEl.innerHTML = '<div class="rasa-cart-drawer__empty">' + esc(emptyText) + '</div>';
 				if (footerEl) footerEl.hidden = true;
 				return;
 			}
@@ -175,6 +263,7 @@
 					+ (it.image ? '<a href="' + esc(it.url) + '"><img class="rasa-cart-drawer__img" src="' + esc(it.image) + '" alt="' + esc(it.name) + '"></a>' : '<div class="rasa-cart-drawer__img"></div>')
 					+ '<div>'
 					+ '<a class="rasa-cart-drawer__title" href="' + esc(it.url) + '">' + esc(it.name) + '</a>'
+					+ (it.unit_price ? '<div class="rasa-cart-drawer__meta">' + esc(it.unit_price) + '</div>' : '')
 					+ (it.variation ? '<div class="rasa-cart-drawer__meta">' + esc(it.variation) + '</div>' : '')
 					+ '<div style="display:flex;align-items:center;">'
 					+ '<div class="rasa-cart-drawer__qty">'
@@ -190,6 +279,10 @@
 			}).join('');
 			if (subtotalEl) subtotalEl.textContent = data.subtotal || '';
 			if (footerEl) footerEl.hidden = false;
+		}
+
+		if (cachedCart) {
+			renderCart(cachedCart);
 		}
 
 		function openDrawer() {
@@ -210,18 +303,44 @@
 			if (e.key === 'Escape' && drawer.classList.contains('active')) closeDrawer();
 		});
 
+		function parseJsonResponse(r) {
+			return r.text().then(function (txt) {
+				try {
+					return JSON.parse(txt);
+				} catch (err) {
+					return { success: false, data: { message: 'Invalid response' } };
+				}
+			});
+		}
+
 		bodyEl.addEventListener('click', function (e) {
 			var btn = e.target.closest('[data-rasa-qty]');
 			if (!btn) return;
 			var row = btn.closest('[data-key]');
 			if (!row) return;
+			var liveCfg = window.RasaTheme || cfg;
 			var fd = new FormData();
-			fd.append('action', 'rasa_update_cart_item');
-			fd.append('nonce', cfg.nonce || '');
+			fd.append('nonce', liveCfg.nonce || '');
 			fd.append('cart_item_key', row.getAttribute('data-key'));
 			fd.append('quantity', btn.getAttribute('data-rasa-qty'));
-			fetch(cfg.ajaxUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
-				.then(function (r) { return r.json(); })
+			fetch(getEndpoint('rasa_update_cart_item'), { method: 'POST', body: fd, credentials: 'same-origin' })
+				.then(parseJsonResponse)
+				.then(function (res) { if (res && res.success) renderCart(res.data); });
+		});
+
+		document.addEventListener('click', function (e) {
+			var pBtn = e.target.closest('[data-rasa-page-qty]');
+			if (!pBtn) return;
+			var row = pBtn.closest('[data-key]');
+			if (!row) return;
+			e.preventDefault();
+			var liveCfg = window.RasaTheme || cfg;
+			var fd = new FormData();
+			fd.append('nonce', liveCfg.nonce || '');
+			fd.append('cart_item_key', row.getAttribute('data-key'));
+			fd.append('quantity', pBtn.getAttribute('data-rasa-page-qty'));
+			fetch(getEndpoint('rasa_update_cart_item'), { method: 'POST', body: fd, credentials: 'same-origin' })
+				.then(parseJsonResponse)
 				.then(function (res) { if (res && res.success) renderCart(res.data); });
 		});
 
@@ -230,60 +349,142 @@
 			if (!cartIcon) return;
 			e.preventDefault();
 			e.stopPropagation();
+			if (!cachedCart) {
+				bodyEl.innerHTML = '<div class="rasa-cart-drawer__empty">' + esc(loadingText) + '</div>';
+			}
+			openDrawer();
 			var liveCfg = window.RasaTheme || cfg;
 			var fd = new FormData();
-			fd.append('action', 'rasa_get_cart');
 			fd.append('nonce', liveCfg.nonce || '');
-			openDrawer();
-			fetch(liveCfg.ajaxUrl || '/wp-admin/admin-ajax.php', { method: 'POST', body: fd, credentials: 'same-origin' })
-				.then(function (r) { return r.json(); })
+			fetch(getEndpoint('rasa_get_cart'), { method: 'POST', body: fd, credentials: 'same-origin' })
+				.then(parseJsonResponse)
 				.then(function (res) {
-					if (res && res.success) renderCart(res.data);
-	});
-}, true);
-
-document.addEventListener('submit', function (e) {
-	var pdpForm = e.target && e.target.id === 'RasaPdpForm' ? e.target : null;
-	if (!pdpForm) return;
-	e.preventDefault();
-	e.stopPropagation();
-	var liveCfg = window.RasaTheme || cfg;
-	var errBox = document.getElementById('RasaPdpError');
-	if (errBox) { errBox.hidden = true; errBox.textContent = ''; }
-	var submitBtn = pdpForm.querySelector('.product-form__submit');
-	var origText = submitBtn ? submitBtn.textContent : '';
-	if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.7'; }
-
-	var fd = new FormData(pdpForm);
-	fd.append('action', 'rasa_add_to_cart');
-	fd.append('nonce', liveCfg.nonce || '');
-	if (!fd.get('product_id') && fd.get('add-to-cart')) {
-		fd.set('product_id', fd.get('add-to-cart'));
-	}
-
-	fetch(liveCfg.ajaxUrl || '/wp-admin/admin-ajax.php', { method: 'POST', body: fd, credentials: 'same-origin' })
-		.then(function (r) { return r.json(); })
-		.then(function (res) {
-			if (res && res.success) {
-				renderCart(res.data);
-				openDrawer();
-			} else {
-				var msg = (res && res.data && res.data.message) ? res.data.message : 'Produkt konnte nicht in den Warenkorb gelegt werden.';
-				if (errBox) { errBox.textContent = msg; errBox.hidden = false; }
-			}
-		})
-		.catch(function () {
-			pdpForm.submit();
-		})
-		.finally(function () {
-			if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.textContent = origText; }
-		});
+					if (res && res.success) {
+						renderCart(res.data);
+					} else if (!cachedCart) {
+						bodyEl.innerHTML = '<div class="rasa-cart-drawer__empty">' + esc(emptyText) + '</div>';
+					}
+				})
+				.catch(function () {
+					if (!cachedCart) {
+						bodyEl.innerHTML = '<div class="rasa-cart-drawer__empty">' + esc(emptyText) + '</div>';
+					}
+				});
 		}, true);
+
+		function handlePdpSubmit(e) {
+			var pdpForm = (e.target && e.target.id === 'RasaPdpForm') ? e.target : (e.currentTarget && e.currentTarget.id === 'RasaPdpForm' ? e.currentTarget : null);
+			if (!pdpForm) return;
+			e.preventDefault();
+			e.stopPropagation();
+			if (pdpForm.dataset.submitting === '1') return;
+			pdpForm.dataset.submitting = '1';
+
+			var liveCfg = window.RasaTheme || cfg;
+			var errBox = document.getElementById('RasaPdpError');
+			if (errBox) { errBox.hidden = true; errBox.textContent = ''; }
+			var submitBtn = pdpForm.querySelector('.product-form__submit');
+			var origText = submitBtn ? submitBtn.textContent : '';
+			if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.7'; }
+
+			var fd = new FormData(pdpForm);
+			fd.append('nonce', liveCfg.nonce || '');
+			if (!fd.get('product_id') && fd.get('add-to-cart')) {
+				fd.set('product_id', fd.get('add-to-cart'));
+			}
+
+			fetch(getEndpoint('rasa_add_to_cart'), { method: 'POST', body: fd, credentials: 'same-origin' })
+				.then(parseJsonResponse)
+				.then(function (res) {
+					if (res && res.success) {
+						renderCart(res.data);
+						openDrawer();
+					} else {
+						var msg = (res && res.data && res.data.message) ? res.data.message : 'Produkt konnte nicht in den Warenkorb gelegt werden.';
+						if (errBox) { errBox.textContent = msg; errBox.hidden = false; }
+					}
+				})
+				.catch(function () {
+					if (errBox) {
+						errBox.textContent = 'Verbindungsfehler. Bitte erneut versuchen.';
+						errBox.hidden = false;
+					}
+				})
+				.finally(function () {
+					pdpForm.dataset.submitting = '0';
+					if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.textContent = origText; }
+				});
+		}
+
+		document.addEventListener('submit', handlePdpSubmit, true);
+		var directPdpForm = document.getElementById('RasaPdpForm');
+		if (directPdpForm) {
+			directPdpForm.addEventListener('submit', handlePdpSubmit, false);
+		}
 	}
 
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', initRasaCartDrawer);
-} else {
-	initRasaCartDrawer();
-}
-}) ();
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initRasaCartDrawer);
+	} else {
+		initRasaCartDrawer();
+	}
+
+	// Mobile Burger Menu Drawer reliability sync & language links inside drawer
+	function initMobileMenuFix() {
+		var detailsEl = document.getElementById('Details-menu-drawer-container');
+		if (!detailsEl) return;
+		var sectionHeader = document.querySelector('.section-header');
+
+		function syncMenuPosition() {
+			document.documentElement.style.setProperty('--viewport-height', window.innerHeight + 'px');
+			if (sectionHeader) {
+				document.documentElement.style.setProperty('--header-bottom-position', parseInt(sectionHeader.getBoundingClientRect().bottom, 10) + 'px');
+			}
+		}
+
+		detailsEl.addEventListener('toggle', function () {
+			syncMenuPosition();
+			if (detailsEl.open) {
+				requestAnimationFrame(function () {
+					detailsEl.classList.add('menu-opening');
+				});
+				if (sectionHeader) sectionHeader.classList.add('menu-open');
+				document.body.classList.add('overflow-hidden-tablet');
+			} else {
+				detailsEl.classList.remove('menu-opening');
+				if (sectionHeader) sectionHeader.classList.remove('menu-open');
+				document.body.classList.remove('overflow-hidden-tablet');
+			}
+		});
+
+		detailsEl.querySelectorAll('a.menu-drawer__menu-item').forEach(function (lnk) {
+			lnk.addEventListener('click', function () {
+				detailsEl.classList.remove('menu-opening');
+				detailsEl.removeAttribute('open');
+				if (sectionHeader) sectionHeader.classList.remove('menu-open');
+				document.body.classList.remove('overflow-hidden-tablet');
+			});
+		});
+
+		var langForm = document.getElementById('HeaderDrawerLanguageForm');
+		if (langForm) {
+			langForm.querySelectorAll('a[data-rasa-lang]').forEach(function (a) {
+				a.addEventListener('click', function (e) {
+					e.preventDefault();
+					var input = langForm.querySelector('input[name="locale_code"]');
+					if (input) input.value = a.getAttribute('data-rasa-lang') || 'de';
+					langForm.submit();
+				});
+			});
+		}
+
+		window.addEventListener('resize', function () {
+			if (detailsEl.open) syncMenuPosition();
+		}, { passive: true });
+	}
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initMobileMenuFix);
+	} else {
+		initMobileMenuFix();
+	}
+})();

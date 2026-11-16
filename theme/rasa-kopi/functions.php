@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('RASA_VERSION', '1.0.3');
+define('RASA_VERSION', '1.0.6');
 define('RASA_DIR', get_template_directory());
 define('RASA_URI', get_template_directory_uri());
 
@@ -273,6 +273,7 @@ function rasa_assets()
 	wp_localize_script('rasa-js-rasa-shim', 'RasaTheme', array(
 		'homeUrl' => home_url('/'),
 		'ajaxUrl' => admin_url('admin-ajax.php'),
+		'wcAjaxUrl' => class_exists('WC_AJAX') ? WC_AJAX::get_endpoint('%%endpoint%%') : home_url('/?wc-ajax=%%endpoint%%'),
 		'cartUrl' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : '#',
 		'checkoutUrl' => function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : '#',
 		'nonce' => wp_create_nonce('rasa-cart'),
@@ -401,57 +402,99 @@ function rasa_cart_count()
 /* ------------------------------------------------------------------ *
  * AJAX: Cart Drawer & Add-to-Cart (tanpa redirect)
  * ------------------------------------------------------------------ */
+function rasa_ensure_wc_cart()
+{
+	if (!function_exists('WC')) {
+		return false;
+	}
+	if (function_exists('wc_load_cart') && (null === WC()->cart || null === WC()->session)) {
+		wc_load_cart();
+	}
+	if (WC()->session && method_exists(WC()->session, 'set_customer_session_cookie') && !WC()->session->has_session()) {
+		WC()->session->set_customer_session_cookie(true);
+	}
+	return (bool) WC()->cart;
+}
+
+function rasa_format_eur($amount, $with_suffix = false)
+{
+	$formatted = '€' . number_format((float) $amount, 2, ',', '.');
+	return $with_suffix ? ($formatted . ' EUR') : $formatted;
+}
+
 function rasa_cart_payload()
 {
+	if (!rasa_ensure_wc_cart()) {
+		return array(
+			'count' => 0,
+			'subtotal' => '€0,00 EUR',
+			'subtotal_num' => 0.0,
+			'cartUrl' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
+			'checkoutUrl' => function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : home_url('/checkout/'),
+			'items' => array(),
+		);
+	}
 	WC()->cart->calculate_totals();
 	$items = array();
 	foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
 		$product = $cart_item['data'] ?? null;
 		if (!$product || !($product instanceof WC_Product))
 			continue;
-		$img_id = $product->get_image_id() ?: $product->get_parent_id();
-		$img_url = wp_get_attachment_image_url($product->get_image_id(), 'thumbnail');
+		$img_url = wp_get_attachment_image_url($product->get_image_id(), 'medium');
 		if (!$img_url && $product->get_parent_id()) {
 			$parent = wc_get_product($product->get_parent_id());
 			if ($parent)
-				$img_url = wp_get_attachment_image_url($parent->get_image_id(), 'thumbnail');
+				$img_url = wp_get_attachment_image_url($parent->get_image_id(), 'medium');
 		}
 		$var_parts = array();
 		if (!empty($cart_item['variation']) && is_array($cart_item['variation'])) {
 			foreach ($cart_item['variation'] as $k => $v) {
 				if ('' !== (string) $v) {
 					$attr_label = wc_attribute_label(str_replace('attribute_', '', $k));
+					if (strtolower($attr_label) === 'size' || strtolower($attr_label) === 'größe') {
+						$attr_label = rasa_tr('Größe', 'Size');
+					}
 					$var_parts[] = $attr_label . ': ' . strtoupper((string) $v);
 				}
 			}
 		}
+		$qty = (int) $cart_item['quantity'];
+		$unit_num = (float) wc_get_price_to_display($product);
+		$line_num = isset($cart_item['line_subtotal']) ? ((float) $cart_item['line_subtotal'] + (float) ($cart_item['line_subtotal_tax'] ?? 0)) : ($unit_num * $qty);
 		$items[] = array(
 			'key' => $cart_item_key,
 			'product_id' => (int) $cart_item['product_id'],
 			'name' => $product->get_title(),
 			'variation' => implode(' · ', $var_parts),
-			'qty' => (int) $cart_item['quantity'],
+			'qty' => $qty,
+			'unit_price' => rasa_format_eur($unit_num),
 			'price' => rasa_price_html($product),
-			'line_total' => wp_strip_all_tags(html_entity_decode(WC()->cart->get_product_subtotal($product, $cart_item['quantity']), ENT_QUOTES, 'UTF-8')),
+			'line_total' => rasa_format_eur($line_num),
 			'image' => $img_url ?: '',
 			'url' => $product->get_permalink(),
 		);
 	}
+	$subtotal_num = (float) WC()->cart->get_subtotal() + (float) WC()->cart->get_subtotal_tax();
 	return array(
 		'count' => WC()->cart->get_cart_contents_count(),
-		'subtotal' => wp_strip_all_tags(html_entity_decode(WC()->cart->get_cart_subtotal(), ENT_QUOTES, 'UTF-8')),
+		'subtotal' => rasa_format_eur($subtotal_num, true),
+		'subtotal_num' => round($subtotal_num, 2),
 		'cartUrl' => wc_get_cart_url(),
 		'checkoutUrl' => wc_get_checkout_url(),
 		'items' => $items,
 	);
 }
 
+add_action('wc_ajax_rasa_add_to_cart', 'rasa_ajax_add_to_cart');
 add_action('wp_ajax_rasa_add_to_cart', 'rasa_ajax_add_to_cart');
 add_action('wp_ajax_nopriv_rasa_add_to_cart', 'rasa_ajax_add_to_cart');
 function rasa_ajax_add_to_cart()
 {
-	check_ajax_referer('rasa-cart', 'nonce');
-	if (!function_exists('WC') || !WC()->cart) {
+	ob_start();
+	if (!rasa_ensure_wc_cart()) {
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
 		wp_send_json_error(array('message' => rasa_tr('Warenkorb nicht verfügbar.', 'Cart is unavailable.')));
 	}
 	$product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : (isset($_POST['add-to-cart']) ? absint($_POST['add-to-cart']) : 0);
@@ -464,35 +507,68 @@ function rasa_ajax_add_to_cart()
 		}
 	}
 
+	$product_obj = $product_id ? wc_get_product($product_id) : null;
+	if ($product_obj && $product_obj->is_type('variable') && !$variation_id && !empty($variation) && class_exists('WC_Data_Store')) {
+		$data_store = WC_Data_Store::load('product');
+		$matched = $data_store ? $data_store->find_matching_product_variation($product_obj, $variation) : 0;
+		if ($matched) {
+			$variation_id = (int) $matched;
+		}
+	}
+
+	if (WC()->session && method_exists(WC()->session, 'set_customer_session_cookie')) {
+		WC()->session->set_customer_session_cookie(true);
+	}
+
 	$passed_validation = apply_filters('woocommerce_add_to_cart_validation', true, $product_id, $qty, $variation_id, $variation);
-	$added = $passed_validation ? WC()->cart->add_to_cart($product_id, $qty, $variation_id, $variation) : false;
+	$added = ($passed_validation && $product_id > 0) ? WC()->cart->add_to_cart($product_id, $qty, $variation_id, $variation) : false;
 	if (!$added) {
 		$errors = wc_get_notices('error');
 		wc_clear_notices();
 		$msg = !empty($errors[0]['notice']) ? wp_strip_all_tags($errors[0]['notice']) : rasa_tr('Produkt konnte nicht in den Warenkorb gelegt werden.', 'Could not add product to cart.');
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
 		wp_send_json_error(array('message' => $msg));
 	}
 	wc_clear_notices();
-	wp_send_json_success(rasa_cart_payload());
+	do_action('woocommerce_set_cart_cookies', true);
+	$payload = rasa_cart_payload();
+	while (ob_get_level() > 0) {
+		ob_end_clean();
+	}
+	wp_send_json_success($payload);
 }
 
+add_action('wc_ajax_rasa_get_cart', 'rasa_ajax_get_cart');
 add_action('wp_ajax_rasa_get_cart', 'rasa_ajax_get_cart');
 add_action('wp_ajax_nopriv_rasa_get_cart', 'rasa_ajax_get_cart');
 function rasa_ajax_get_cart()
 {
-	check_ajax_referer('rasa-cart', 'nonce');
-	if (!function_exists('WC') || !WC()->cart) {
+	ob_start();
+	if (!rasa_ensure_wc_cart()) {
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
 		wp_send_json_error(array('message' => 'WooCommerce inactive'));
 	}
-	wp_send_json_success(rasa_cart_payload());
+	$payload = rasa_cart_payload();
+	while (ob_get_level() > 0) {
+		ob_end_clean();
+	}
+	wp_send_json_success($payload);
 }
 
+add_action('wc_ajax_rasa_update_cart_item', 'rasa_ajax_update_cart_item');
 add_action('wp_ajax_rasa_update_cart_item', 'rasa_ajax_update_cart_item');
 add_action('wp_ajax_nopriv_rasa_update_cart_item', 'rasa_ajax_update_cart_item');
 function rasa_ajax_update_cart_item()
 {
-	check_ajax_referer('rasa-cart', 'nonce');
-	if (!function_exists('WC') || !WC()->cart) {
+	ob_start();
+	if (!rasa_ensure_wc_cart()) {
+		while (ob_get_level() > 0) {
+			ob_end_clean();
+		}
 		wp_send_json_error(array('message' => 'WooCommerce inactive'));
 	}
 	$key = isset($_POST['cart_item_key']) ? sanitize_text_field(wp_unslash($_POST['cart_item_key'])) : '';
@@ -503,8 +579,13 @@ function rasa_ajax_update_cart_item()
 		} else {
 			WC()->cart->set_quantity($key, $qty, true);
 		}
+		do_action('woocommerce_set_cart_cookies', true);
 	}
-	wp_send_json_success(rasa_cart_payload());
+	$payload = rasa_cart_payload();
+	while (ob_get_level() > 0) {
+		ob_end_clean();
+	}
+	wp_send_json_success($payload);
 }
 
 /* ------------------------------------------------------------------ *

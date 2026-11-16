@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('RASA_VERSION', '1.0.6');
+define('RASA_VERSION', '1.0.8');
 define('RASA_DIR', get_template_directory());
 define('RASA_URI', get_template_directory_uri());
 
@@ -295,50 +295,11 @@ function rasa_global_strings()
 		return;
 	$home = esc_url(home_url('/'));
 	?>
-	<script>
-		window.shopUrl = '<?php echo esc_js(home_url()); ?>';
-		window.routes = {
-			cart_add_url: '<?php echo esc_js(home_url('/cart/add')); ?>',
-			cart_change_url: '<?php echo esc_js(home_url('/cart/change')); ?>',
-			cart_update_url: '<?php echo esc_js(home_url('/cart/update')); ?>',
-			cart_url: '<?php echo esc_js(wc_get_cart_url()); ?>',
-			predictive_search_url: '<?php echo esc_js(home_url('/search/suggest')); ?>',
-		};
-
-		window.cartStrings = {
-			error: `Beim Aktualisieren deines Warenkorbs ist ein Fehler aufgetreten. Bitte versuche es erneut.`,
-			quantityError: `Du kannst deinem Warenkorb nur [quantity] Stück dieses Artikels hinzufügen.`,
-		};
-
-		window.variantStrings = {
-			addToCart: `In den Warenkorb legen`,
-			soldOut: `Ausverkauft`,
-			unavailable: `Nicht verfügbar`,
-			unavailable_with_option: `Die Auswahl [value] ist nicht verfügbar.`,
-		};
-
-		window.quickOrderListStrings = {
-			itemsAdded: `[quantity] Artikel wurden zum Warenkorb hinzugefügt.`,
-			itemAdded: `1 Artikel wurde zum Warenkorb hinzugefügt.`,
-			itemsRemoved: `[quantity] Artikel wurden aus dem Warenkorb entfernt.`,
-			itemRemoved: `1 Artikel wurde aus dem Warenkorb entfernt.`,
-			viewCart: `Warenkorb ansehen`,
-			each: `[money] / Artikel`,
-			min_error: `Mindestens [min] Stück dieses Artikels erforderlich.`,
-			max_error: `Höchstens [max] Stück dieses Artikels erlaubt.`,
-			step_error: `Du kannst diesen Artikel nur in Abstufungen von [step] hinzufügen.`,
-		};
-
-		window.accessibilityStrings = {
-			imageAvailable: `Bild [index] ist nun in der Galerieansicht verfügbar`,
-			shareSuccess: `Link in die Zwischenablage kopiert`,
-			pauseSlideshow: `Slideshow pausieren`,
-			playSlideshow: `Slideshow abspielen`,
-			recipientFormExpanded: `Empfänger-Formular erweitert`,
-			recipientFormCollapsed: `Empfänger-Formular zusammengeklappt`,
-			countrySelectorSearchCount: `[count] Länder gefunden`,
-		};
-	</script>
+	<script>		window.shopUrl = '<?php echo esc_js(home_url()); ?>';		window.routes = {			cart_add_url: '<?php echo esc_js(home_url('/cart/add')); ?>',			cart_change_url: '<?php echo esc_js(home_url('/cart/change')); ?>',			cart_update_url: '<?php echo esc_js(home_url('/cart/update')); ?>',			cart_url: '<?php echo esc_js(wc_get_cart_url()); ?>',			predictive_search_url: '<?php echo esc_js(home_url('/search/suggest')); ?>',		};
+			window.cartStrings = {			error: `Beim Aktualisieren deines Warenkorbs ist ein Fehler aufgetreten. Bitte versuche es erneut.`,			quantityError: `Du kannst deinem Warenkorb nur [quantity] Stück dieses Artikels hinzufügen.`,		};
+			window.variantStrings = {			addToCart: `In den Warenkorb legen`,			soldOut: `Ausverkauft`,			unavailable: `Nicht verfügbar`,			unavailable_with_option: `Die Auswahl [value] ist nicht verfügbar.`,		};
+			window.quickOrderListStrings = {			itemsAdded: `[quantity] Artikel wurden zum Warenkorb hinzugefügt.`,			itemAdded: `1 Artikel wurde zum Warenkorb hinzugefügt.`,			itemsRemoved: `[quantity] Artikel wurden aus dem Warenkorb entfernt.`,			itemRemoved: `1 Artikel wurde aus dem Warenkorb entfernt.`,			viewCart: `Warenkorb ansehen`,			each: `[money] / Artikel`,			min_error: `Mindestens [min] Stück dieses Artikels erforderlich.`,			max_error: `Höchstens [max] Stück dieses Artikels erlaubt.`,			step_error: `Du kannst diesen Artikel nur in Abstufungen von [step] hinzufügen.`,		};
+			window.accessibilityStrings = {			imageAvailable: `Bild [index] ist nun in der Galerieansicht verfügbar`,			shareSuccess: `Link in die Zwischenablage kopiert`,			pauseSlideshow: `Slideshow pausieren`,			playSlideshow: `Slideshow abspielen`,			recipientFormExpanded: `Empfänger-Formular erweitert`,			recipientFormCollapsed: `Empfänger-Formular zusammengeklappt`,			countrySelectorSearchCount: `[count] Länder gefunden`,		};</script>
 	<?php
 }
 add_action('wp_head', 'rasa_global_strings', 5);
@@ -630,7 +591,8 @@ add_action('template_redirect', function () {
 	<div class="color-scheme-2 gradient" style="padding: 48px 0 64px;">
 		<div class="page-width" style="max-width: 72rem;">
 			<h1 class="main-page-title page-title h0" style="margin-bottom: 1.6rem;">
-				<?php echo esc_html(rasa_tr('Kontakt', 'Contact')); ?></h1>
+				<?php echo esc_html(rasa_tr('Kontakt', 'Contact')); ?>
+			</h1>
 			<p style="font-size: 1.5rem; color: rgba(0,0,0,0.75); margin-bottom: 3rem;">
 				<?php echo esc_html(rasa_tr('Du hast Fragen zu unseren Produkten, B2B-Anfragen oder Bestellungen? Schreib uns gerne eine Nachricht.', 'Questions about our products, B2B inquiries, or orders? Feel free to send us a message.')); ?>
 			</p>
@@ -643,8 +605,7 @@ add_action('template_redirect', function () {
 			<form method="post" action="" style="display:grid;gap:1.6rem;">
 				<?php wp_nonce_field('rasa_contact', 'rasa_contact_nonce'); ?>
 				<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.6rem;">
-					<input type="text" name="contact_name"
-						placeholder="<?php echo esc_attr(rasa_tr('Name', 'Name')); ?>"
+					<input type="text" name="contact_name" placeholder="<?php echo esc_attr(rasa_tr('Name', 'Name')); ?>"
 						style="padding:1.2rem 1.4rem;border:1px solid rgba(0,0,0,.35);font-family:inherit;font-size:1.4rem;background:#fff;">
 					<input type="email" name="contact_email" required
 						placeholder="<?php echo esc_attr(rasa_tr('E-Mail *', 'Email *')); ?>"

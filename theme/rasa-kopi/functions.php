@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('RASA_VERSION', '1.0.9');
+define('RASA_VERSION', '1.0.10');
 define('RASA_DIR', get_template_directory());
 define('RASA_URI', get_template_directory_uri());
 
@@ -218,10 +218,11 @@ function rasa_assets()
 	$deps = array('rasa-fonts');
 	$i = 0;
 	foreach ($css as $f) {
-		if (basename($f) === 'template-giftcard.css' || basename($f) === 'rasa-checkout.css') {
+		$bn = basename($f);
+		if ($bn === 'template-giftcard.css' || $bn === 'rasa-overrides.css') {
 			continue;
 		}
-		$handle = 'rasa-css-' . str_replace(array('.css', '-'), array('', '-'), basename($f));
+		$handle = 'rasa-css-' . str_replace(array('.css', '-'), array('', '-'), $bn);
 		wp_enqueue_style($handle, $base . basename($f), $deps, RASA_VERSION);
 		$deps = array($handle);
 		$i++;
@@ -232,24 +233,6 @@ function rasa_assets()
 
 	// 5. Theme base (style.css, wajib di-enqueue utk WP)
 	wp_enqueue_style('rasa-style', get_stylesheet_uri(), array('rasa-overrides'), RASA_VERSION);
-
-	// 5b. Dedicated Shopify-style Checkout assets (hanya dimuat di /checkout/)
-	if (function_exists('is_checkout') && is_checkout()) {
-		wp_enqueue_style('rasa-checkout', RASA_URI . '/assets/css/rasa-checkout.css', array('rasa-style'), RASA_VERSION);
-		wp_enqueue_script('rasa-js-checkout', $base_js . 'rasa-checkout.js', array('jquery', 'rasa-js-rasa-shim'), RASA_VERSION, true);
-		wp_localize_script('rasa-js-checkout', 'RasaCheckout', array(
-			'wcAjaxUrl' => class_exists('WC_AJAX') ? WC_AJAX::get_endpoint('%%endpoint%%') : home_url('/?wc-ajax=%%endpoint%%'),
-			'applyCouponNonce' => wp_create_nonce('apply-coupon'),
-			'removeCouponNonce' => wp_create_nonce('remove-coupon'),
-			'i18n' => array(
-				'enterEmail' => rasa_tr('Bitte gib eine gültige E-Mail-Adresse ein.', 'Please enter a valid email address.'),
-				'fillRequired' => rasa_tr('Bitte fülle alle Pflichtfelder der Lieferadresse aus.', 'Please fill in all required delivery address fields.'),
-				'couponEmpty' => rasa_tr('Bitte gib einen Rabattcode ein.', 'Please enter a discount code.'),
-				'freeShipping' => rasa_tr('Kostenlos', 'Free'),
-				'noShippingSelected' => rasa_tr('Wird im nächsten Schritt berechnet', 'Calculated at next step'),
-			),
-		));
-	}
 
 	// 6. JS — rantai sesuai urutan theme.liquid Dawn (defer via in_footer)
 	$base_js = RASA_URI . '/assets/js/';
@@ -302,7 +285,7 @@ function rasa_assets()
 		),
 	));
 }
-add_action('wp_enqueue_scripts', 'rasa_assets');
+add_action('wp_enqueue_scripts', 'rasa_assets', 20);
 
 /* ------------------------------------------------------------------ *
  * Strings + routes global (persis blok <script> di theme.liquid, DE)
@@ -575,9 +558,6 @@ function rasa_body_class($classes)
 	$classes[] = 'color-scheme-1';
 	$classes[] = 'page-width-constrain';
 	$classes[] = 'rasa-lang-' . rasa_current_lang();
-	if (function_exists('is_checkout') && is_checkout()) {
-		$classes[] = 'rasa-checkout-body';
-	}
 	return $classes;
 }
 add_filter('body_class', 'rasa_body_class');

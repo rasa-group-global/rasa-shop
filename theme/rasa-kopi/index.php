@@ -21,12 +21,18 @@ if (function_exists('is_checkout') && is_checkout()) {
 	?>
 	<div class="rasa-page-wrap color-scheme-1 gradient" style="padding: 36px 0 64px;">
 		<div class="page-width">
-			<article class="rasa-page-article color-scheme-1 gradient" style="display:block;width:100%;">
-					<h1 class="h1 article__title" style="margin:0 0 2.4rem;"><?php echo esc_html($checkout_title); ?></h1>
+				<?php
+				while (have_posts()):
+					the_post();
+					?>
+					<article class="rasa-page-article color-scheme-1 gradient" style="display:block;width:100%;">
+						<h1 class="h1 article__title" style="margin:0 0 2.4rem;"><?php echo esc_html($checkout_title); ?></h1>
 					<div class="article__content rasa-checkout-content" style="width:100%;display:block;">
-						<?php echo do_shortcode('[woocommerce_checkout]'); // phpcs:ignore WordPress.Security.EscapeOutput ?>
-					</div>
-			</article>
+						<?php the_content(); ?></div>
+				</article>
+				<?php
+				endwhile;
+				?>
 		</div>
 	</div>
 	<?php

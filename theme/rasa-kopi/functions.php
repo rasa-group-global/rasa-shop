@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('RASA_VERSION', '1.0.13');
+define('RASA_VERSION', '1.0.14');
 define('RASA_DIR', get_template_directory());
 define('RASA_URI', get_template_directory_uri());
 
@@ -296,11 +296,7 @@ function rasa_global_strings()
 		return;
 	$home = esc_url(home_url('/'));
 	?>
-	<script>		window.shopUrl = '<?php echo esc_js(home_url()); ?>'; window.routes = { cart_add_url: '<?php echo esc_js(home_url('/cart/add')); ?>', cart_change_url: '<?php echo esc_js(home_url('/cart/change')); ?>', cart_update_url: '<?php echo esc_js(home_url('/cart/update')); ?>', cart_url: '<?php echo esc_js(wc_get_cart_url()); ?>', predictive_search_url: '<?php echo esc_js(home_url('/search/suggest')); ?>', };
-		window.cartStrings = { error: `Beim Aktualisieren deines Warenkorbs ist ein Fehler aufgetreten. Bitte versuche es erneut.`, quantityError: `Du kannst deinem Warenkorb nur [quantity] Stück dieses Artikels hinzufügen.`, };
-		window.variantStrings = { addToCart: `In den Warenkorb legen`, soldOut: `Ausverkauft`, unavailable: `Nicht verfügbar`, unavailable_with_option: `Die Auswahl [value] ist nicht verfügbar.`, };
-		window.quickOrderListStrings = { itemsAdded: `[quantity] Artikel wurden zum Warenkorb hinzugefügt.`, itemAdded: `1 Artikel wurde zum Warenkorb hinzugefügt.`, itemsRemoved: `[quantity] Artikel wurden aus dem Warenkorb entfernt.`, itemRemoved: `1 Artikel wurde aus dem Warenkorb entfernt.`, viewCart: `Warenkorb ansehen`, each: `[money] / Artikel`, min_error: `Mindestens [min] Stück dieses Artikels erforderlich.`, max_error: `Höchstens [max] Stück dieses Artikels erlaubt.`, step_error: `Du kannst diesen Artikel nur in Abstufungen von [step] hinzufügen.`, };
-		window.accessibilityStrings = { imageAvailable: `Bild [index] ist nun in der Galerieansicht verfügbar`, shareSuccess: `Link in die Zwischenablage kopiert`, pauseSlideshow: `Slideshow pausieren`, playSlideshow: `Slideshow abspielen`, recipientFormExpanded: `Empfänger-Formular erweitert`, recipientFormCollapsed: `Empfänger-Formular zusammengeklappt`, countrySelectorSearchCount: `[count] Länder gefunden`, };</script>
+	<script>		window.shopUrl = '<?php echo esc_js(home_url()); ?>'; window.routes = { cart_add_url: '<?php echo esc_js(home_url('/cart/add')); ?>', cart_change_url: '<?php echo esc_js(home_url('/cart/change')); ?>', cart_update_url: '<?php echo esc_js(home_url('/cart/update')); ?>', cart_url: '<?php echo esc_js(wc_get_cart_url()); ?>', predictive_search_url: '<?php echo esc_js(home_url('/search/suggest')); ?>', };		window.cartStrings = { error: `Beim Aktualisieren deines Warenkorbs ist ein Fehler aufgetreten. Bitte versuche es erneut.`, quantityError: `Du kannst deinem Warenkorb nur [quantity] Stück dieses Artikels hinzufügen.`, };		window.variantStrings = { addToCart: `In den Warenkorb legen`, soldOut: `Ausverkauft`, unavailable: `Nicht verfügbar`, unavailable_with_option: `Die Auswahl [value] ist nicht verfügbar.`, };		window.quickOrderListStrings = { itemsAdded: `[quantity] Artikel wurden zum Warenkorb hinzugefügt.`, itemAdded: `1 Artikel wurde zum Warenkorb hinzugefügt.`, itemsRemoved: `[quantity] Artikel wurden aus dem Warenkorb entfernt.`, itemRemoved: `1 Artikel wurde aus dem Warenkorb entfernt.`, viewCart: `Warenkorb ansehen`, each: `[money] / Artikel`, min_error: `Mindestens [min] Stück dieses Artikels erforderlich.`, max_error: `Höchstens [max] Stück dieses Artikels erlaubt.`, step_error: `Du kannst diesen Artikel nur in Abstufungen von [step] hinzufügen.`, };		window.accessibilityStrings = { imageAvailable: `Bild [index] ist nun in der Galerieansicht verfügbar`, shareSuccess: `Link in die Zwischenablage kopiert`, pauseSlideshow: `Slideshow pausieren`, playSlideshow: `Slideshow abspielen`, recipientFormExpanded: `Empfänger-Formular erweitert`, recipientFormCollapsed: `Empfänger-Formular zusammengeklappt`, countrySelectorSearchCount: `[count] Länder gefunden`, };</script>
 	<?php
 }
 add_action('wp_head', 'rasa_global_strings', 5);
@@ -633,4 +629,5 @@ add_action('template_redirect', function () {
  * Include inc/
  * ------------------------------------------------------------------ */
 require_once RASA_DIR . '/inc/woo-compat.php';
+require_once RASA_DIR . '/inc/revolut-sandbox-compat.php';
 require_once RASA_DIR . '/inc/template-tags.php';

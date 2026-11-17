@@ -2,8 +2,7 @@
 
 - **Tanggal**: 2026-11-17
 - **Repository**: `digitalCommerce` (`dev` branch -> `shop-dev.rasakopi.coffee`)
-- **Theme Version**: `1.0.10` ([functions.php](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/functions.php) & [style.css](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/style.css))
-- **Theme Version**: `1.0.11` ([functions.php](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/functions.php) & [style.css](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/style.css))
+- **Theme Version**: `1.0.12` ([functions.php](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/functions.php) & [style.css](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/style.css))
 - **Baseline Pembanding**: Commit `ac8c227` (sebelum implementasi dark checkout `da5a4cc`)
 
 ---
@@ -22,7 +21,7 @@ Setelah melakukan revert dari dark Shopify checkout (`da5a4cc`) ke Light Theme C
 
 3. **Selector `label` Terlalu Luas + Konflik Pseudo-Element Dawn `.button`**
    - **Temuan**: Selector `.woocommerce form.woocommerce-checkout label { display: block; }` sebelumnya ikut mengenai label `ul#shipping_method`, checkbox syarat/ketentuan (`#terms`), dan checkbox saved-card milik Revolut. Selain itu, `.button::before` dan `.button::after` pada [base.css](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/assets/css/base.css#L1245-L1287) dapat menambah border/shadow ganda pada `#place_order`, serta halaman `order-received` belum distyling di Light Theme.
-   - **Perbaikan di [rasa-overrides.css](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/assets/css/rasa-overrides.css#L576-L978)**:
+   - **Perbaikan di [rasa-overrides.css](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/assets/css/rasa-overrides.css#L463-L1158)**:
      - Label input dibatasi ke `.woocommerce form.woocommerce-checkout .form-row>label`.
      - Reset ukuran `input[type="checkbox"]` & `input[type="radio"]`, layout flex rapi untuk `ul#shipping_method` & `#payment ul.payment_methods li.wc_payment_method`, dan penekanan `.woocommerce-checkout .button::before, .woocommerce-checkout .button::after { display: none !important; }`.
      - Tambah styling Light Theme untuk `.woocommerce-order`, `ul.woocommerce-order-overview`, `table.woocommerce-table--order-details`, dan `.woocommerce-customer-details address`.

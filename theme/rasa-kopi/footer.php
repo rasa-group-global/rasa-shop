@@ -10,6 +10,14 @@ $legal_menu  = rasa_footer_menu_items( 'footer-legal' );
 ?>
 	</main><!-- #MainContent -->
 
+<?php
+if ( function_exists( 'is_checkout' ) && is_checkout() ) {
+	wp_footer();
+	echo '</body></html>';
+	return;
+}
+?>
+
 <footer class="footer color-scheme-2 gradient section-footer-padding">
 	<style>
 		.section-footer-padding {

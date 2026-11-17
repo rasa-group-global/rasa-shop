@@ -11,6 +11,15 @@ if ( function_exists( 'is_cart' ) && is_cart() && file_exists( RASA_DIR . '/wooc
 	get_footer();
 	return;
 }
+
+if ( function_exists( 'is_checkout' ) && is_checkout() ) {
+	$is_thankyou = function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'order-received' );
+	echo $is_thankyou ? '<div class="rasa-co-thankyou-shell">' : '<div class="rasa-co-shell">';
+	echo do_shortcode( '[woocommerce_checkout]' );
+	echo '</div>';
+	get_footer();
+	return;
+}
 ?>
 <div class="rasa-page-wrap color-scheme-1 gradient" style="padding: 36px 0 64px;">
 	<div class="page-width">

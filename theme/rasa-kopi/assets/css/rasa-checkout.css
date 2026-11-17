@@ -1,0 +1,865 @@
+/* ------------------------------------------------------------------ *
+ * rasa-checkout.css — Shopify Dark Espresso Checkout 1:1
+ * Dimuat hanya pada halaman Checkout (/checkout/).
+ * ------------------------------------------------------------------ */
+
+body.rasa-checkout-body {
+	background-color: #1b1515 !important;
+	color: #f5f0ee !important;
+	min-height: 100vh;
+	margin: 0;
+	font-family: var(--font-body-family, "Bai Jamjuree", -apple-system, BlinkMacSystemFont, sans-serif);
+}
+
+/* Minimal Header */
+.rasa-co-header {
+	background-color: #1b1515;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+	padding: 2.2rem 2rem;
+}
+.rasa-co-header__inner {
+	max-width: 114rem;
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.rasa-co-logo-link {
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
+}
+.rasa-co-logo {
+	height: 3.4rem;
+	width: auto;
+	display: block;
+	filter: brightness(0) invert(1);
+}
+
+/* Outer Shell & Split Background */
+.rasa-co-shell {
+	position: relative;
+	min-height: calc(100vh - 8rem);
+	background: #1b1515;
+}
+@media screen and (min-width: 960px) {
+	.rasa-co-shell {
+		background: linear-gradient(to right, #1b1515 0%, #1b1515 54%, #141010 54%, #141010 100%);
+	}
+}
+.rasa-co-shell .woocommerce {
+	max-width: 114rem;
+	margin: 0 auto;
+}
+
+/* 2-Column Grid */
+.rasa-co-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 54fr) minmax(0, 46fr);
+	min-height: calc(100vh - 8rem);
+	width: 100%;
+}
+.rasa-co-left {
+	padding: 3.2rem 4.8rem 4.8rem 2rem;
+	border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.rasa-co-left__inner {
+	max-width: 56rem;
+	margin-left: auto;
+}
+.rasa-co-right {
+	padding: 3.6rem 2rem 4.8rem 4.4rem;
+	background: #141010;
+}
+.rasa-co-right__inner {
+	max-width: 44rem;
+	margin-right: auto;
+	position: sticky;
+	top: 2.4rem;
+}
+
+/* Notices */
+.rasa-co-notices-wrap,
+.rasa-co-shell .woocommerce-NoticeGroup-checkout {
+	max-width: 114rem;
+	margin: 0 auto;
+	padding: 1.6rem 2rem 0;
+}
+.rasa-co-shell .woocommerce-error,
+.rasa-co-shell .woocommerce-info,
+.rasa-co-shell .woocommerce-message {
+	background: #2b1d1d !important;
+	color: #f9dedc !important;
+	border: 1px solid rgba(235, 118, 118, 0.45) !important;
+	border-radius: 6px;
+	padding: 1.2rem 1.6rem !important;
+	margin: 0 0 1.6rem !important;
+	font-size: 1.35rem;
+	list-style: none;
+}
+.rasa-co-shell .woocommerce-error li {
+	margin: 0.3rem 0;
+}
+.rasa-co-shell .woocommerce-info a {
+	color: #d8a995;
+}
+.rasa-co-login-required {
+	max-width: 60rem;
+	margin: 4rem auto;
+	padding: 2.4rem;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 6px;
+	text-align: center;
+	font-size: 1.5rem;
+}
+
+/* Mobile Accordion Summary Bar (< 960px) */
+.rasa-co-mobile-bar {
+	display: none;
+}
+.rasa-co-mobile-bar__btn {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1.6rem 2rem;
+	background: #141010;
+	border: 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+	color: #d8a995;
+	font-family: inherit;
+	font-size: 1.4rem;
+	cursor: pointer;
+}
+.rasa-co-mobile-bar__left {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.8rem;
+}
+.rasa-co-mobile-bar__label-hide {
+	display: none;
+}
+.rasa-co-mobile-bar__btn[aria-expanded="true"] .rasa-co-mobile-bar__label-show {
+	display: none;
+}
+.rasa-co-mobile-bar__btn[aria-expanded="true"] .rasa-co-mobile-bar__label-hide {
+	display: inline;
+}
+.rasa-co-mobile-bar__caret {
+	transition: transform 0.2s ease;
+}
+.rasa-co-mobile-bar__btn[aria-expanded="true"] .rasa-co-mobile-bar__caret {
+	transform: rotate(180deg);
+}
+.rasa-co-mobile-bar__total {
+	color: #f5f0ee;
+	font-size: 1.6rem;
+	font-weight: 600;
+}
+
+/* Breadcrumb Stepper */
+.rasa-co-breadcrumbs {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.7rem;
+	margin-bottom: 2.4rem;
+	font-size: 1.25rem;
+}
+.rasa-co-crumb {
+	background: transparent;
+	border: 0;
+	padding: 0;
+	font-family: inherit;
+	font-size: 1.25rem;
+	color: rgba(245, 240, 238, 0.55);
+	text-decoration: none;
+	cursor: pointer;
+}
+.rasa-co-crumb--link {
+	color: #d8a995;
+}
+.rasa-co-crumb--link:hover,
+.rasa-co-crumb--btn.is-done:hover {
+	text-decoration: underline;
+}
+.rasa-co-crumb--btn.is-active {
+	color: #f5f0ee;
+	font-weight: 600;
+	cursor: default;
+}
+.rasa-co-crumb--btn.is-done {
+	color: #d8a995;
+}
+.rasa-co-crumb--static {
+	cursor: default;
+}
+.rasa-co-crumb__sep {
+	color: rgba(245, 240, 238, 0.35);
+}
+
+/* Express Checkout */
+.rasa-co-express {
+	margin-bottom: 2.4rem;
+}
+.rasa-co-express__title {
+	text-align: center;
+	font-size: 1.2rem;
+	color: rgba(245, 240, 238, 0.7);
+	margin-bottom: 1.2rem;
+}
+.rasa-co-or {
+	display: flex;
+	align-items: center;
+	text-align: center;
+	color: rgba(245, 240, 238, 0.5);
+	font-size: 1.2rem;
+	margin: 2rem 0 0;
+}
+.rasa-co-or::before,
+.rasa-co-or::after {
+	content: '';
+	flex: 1;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+.rasa-co-or span {
+	padding: 0 1.4rem;
+}
+
+/* Sections & Headings */
+.rasa-co-section {
+	margin-bottom: 2.4rem;
+}
+.rasa-co-section__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-bottom: 1.2rem;
+}
+.rasa-co-heading {
+	margin: 0 0 1.2rem;
+	font-size: 2rem;
+	font-weight: 500;
+	color: #f5f0ee;
+	letter-spacing: 0.01em;
+}
+.rasa-co-section__head .rasa-co-heading {
+	margin-bottom: 0;
+}
+.rasa-co-subtitle {
+	margin: -0.6rem 0 1.4rem;
+	font-size: 1.3rem;
+	color: rgba(245, 240, 238, 0.65);
+}
+.rasa-co-login-link {
+	font-size: 1.3rem;
+	color: #d8a995;
+	text-decoration: underline;
+	text-underline-offset: 0.3rem;
+}
+
+/* Dark Outlined Form Fields (WooCommerce form-row) */
+.rasa-co-fields {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.2rem;
+}
+.rasa-co-fields .form-row {
+	margin: 0 !important;
+	padding: 0 !important;
+	width: 100%;
+	float: none !important;
+	box-sizing: border-box;
+}
+.rasa-co-fields .form-row.form-row-first,
+.rasa-co-fields .form-row.form-row-last {
+	width: calc(50% - 0.6rem) !important;
+}
+.rasa-co-fields .form-row label {
+	display: block;
+	font-size: 1.2rem;
+	color: rgba(245, 240, 238, 0.72);
+	margin-bottom: 0.45rem;
+	font-weight: 400;
+}
+.rasa-co-fields .form-row label .required {
+	color: #d8a995;
+	text-decoration: none;
+}
+.rasa-co-fields .form-row label .optional {
+	color: rgba(245, 240, 238, 0.5);
+	font-size: 1.15rem;
+}
+.rasa-co-fields input.input-text,
+.rasa-co-fields select,
+.rasa-co-fields textarea {
+	width: 100% !important;
+	box-sizing: border-box !important;
+	background-color: #1b1515 !important;
+	color: #f5f0ee !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+	border-radius: 6px !important;
+	padding: 1.25rem 1.4rem !important;
+	font-size: 1.4rem !important;
+	font-family: inherit !important;
+	line-height: 1.4 !important;
+	outline: none !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	box-shadow: none !important;
+}
+.rasa-co-fields input.input-text::placeholder,
+.rasa-co-fields textarea::placeholder {
+	color: rgba(245, 240, 238, 0.42);
+}
+.rasa-co-fields input.input-text:focus,
+.rasa-co-fields select:focus,
+.rasa-co-fields textarea:focus {
+	border-color: #d8a995 !important;
+	box-shadow: 0 0 0 1px #d8a995 !important;
+}
+.rasa-co-fields .form-row.woocommerce-invalid input.input-text,
+.rasa-co-fields .form-row.woocommerce-invalid select {
+	border-color: #ef6f6c !important;
+}
+
+/* Select2 Dark Override (Country dropdown WooCommerce) */
+.rasa-co-fields .select2-container--default .select2-selection--single {
+	height: auto !important;
+	background-color: #1b1515 !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+	border-radius: 6px !important;
+	padding: 1rem 1.4rem !important;
+}
+.rasa-co-fields .select2-container--default .select2-selection--single .select2-selection__rendered {
+	color: #f5f0ee !important;
+	padding: 0 !important;
+	line-height: 1.5 !important;
+	font-size: 1.4rem !important;
+}
+.rasa-co-fields .select2-container--default .select2-selection--single .select2-selection__arrow {
+	height: 100% !important;
+	right: 1rem !important;
+}
+body.rasa-checkout-body .select2-dropdown {
+	background-color: #241c1c !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+	color: #f5f0ee !important;
+}
+body.rasa-checkout-body .select2-search--dropdown .select2-search__field {
+	background-color: #1b1515 !important;
+	color: #f5f0ee !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+body.rasa-checkout-body .select2-results__option--highlighted[aria-selected] {
+	background-color: #d8a995 !important;
+	color: #1a1414 !important;
+}
+
+/* Checkboxes */
+.rasa-co-checkbox {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.9rem;
+	margin-top: 1.2rem;
+	font-size: 1.3rem;
+	line-height: 1.45;
+	color: rgba(245, 240, 238, 0.85);
+	cursor: pointer;
+}
+.rasa-co-checkbox input[type="checkbox"] {
+	margin-top: 0.2rem;
+	width: 1.6rem;
+	height: 1.6rem;
+	accent-color: #d8a995;
+	flex-shrink: 0;
+	cursor: pointer;
+}
+.rasa-co-diff-shipping {
+	margin-top: 1rem;
+}
+.rasa-co-diff-shipping .shipping_address {
+	margin-top: 1.4rem;
+}
+
+/* Recap Box (Steps 2 & 3) */
+.rasa-co-recap {
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	border-radius: 6px;
+	margin-bottom: 2.6rem;
+	background: rgba(255, 255, 255, 0.02);
+}
+.rasa-co-recap__row {
+	display: grid;
+	grid-template-columns: 9.5rem minmax(0, 1fr) auto;
+	gap: 1.2rem;
+	align-items: baseline;
+	padding: 1.2rem 1.6rem;
+	font-size: 1.35rem;
+}
+.rasa-co-recap__row + .rasa-co-recap__row {
+	border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.rasa-co-recap__label {
+	color: rgba(245, 240, 238, 0.6);
+}
+.rasa-co-recap__val {
+	color: #f5f0ee;
+	word-break: break-word;
+}
+.rasa-co-recap__edit {
+	background: transparent;
+	border: 0;
+	padding: 0;
+	color: #d8a995;
+	font-size: 1.25rem;
+	font-family: inherit;
+	cursor: pointer;
+	text-decoration: underline;
+	text-underline-offset: 0.25rem;
+}
+
+/* Shipping Method Card (Step 2) */
+.rasa-co-shipping-box {
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	border-radius: 6px;
+	padding: 1.2rem 1.6rem;
+	background: rgba(255, 255, 255, 0.02);
+}
+.rasa-co-shipping-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.rasa-co-shipping-table th {
+	display: none;
+}
+.rasa-co-shipping-table td {
+	padding: 0;
+	border: 0;
+}
+.rasa-co-shipping-table ul#shipping_method {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.rasa-co-shipping-table ul#shipping_method li {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.8rem 0;
+	font-size: 1.4rem;
+}
+.rasa-co-shipping-table ul#shipping_method li + li {
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.rasa-co-shipping-table ul#shipping_method input[type="radio"] {
+	accent-color: #d8a995;
+	width: 1.6rem;
+	height: 1.6rem;
+	cursor: pointer;
+}
+.rasa-co-shipping-table ul#shipping_method label {
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+	color: #f5f0ee;
+	cursor: pointer;
+}
+.rasa-co-muted {
+	margin: 0;
+	font-size: 1.35rem;
+	color: rgba(245, 240, 238, 0.72);
+}
+
+/* Validation Alert */
+.rasa-co-step-error {
+	margin: 1.6rem 0 0;
+	padding: 1.1rem 1.4rem;
+	border: 1px solid rgba(239, 111, 108, 0.55);
+	background: rgba(239, 111, 108, 0.12);
+	color: #ffd5d4;
+	border-radius: 6px;
+	font-size: 1.35rem;
+}
+
+/* Action Bar (< Back & Primary Blush Button) */
+.rasa-co-actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1.6rem;
+	margin-top: 2.4rem;
+}
+.rasa-co-actions--payment {
+	margin-top: 1.4rem;
+}
+.rasa-co-back-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 1.35rem;
+	color: #d8a995;
+	text-decoration: none;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	font-family: inherit;
+	cursor: pointer;
+}
+.rasa-co-back-link:hover {
+	text-decoration: underline;
+}
+.rasa-co-btn-primary,
+.rasa-co-shell #payment #place_order {
+	background-color: #d8a995 !important;
+	color: #1a1414 !important;
+	border: 0 !important;
+	border-radius: 6px !important;
+	padding: 1.6rem 2.6rem !important;
+	font-size: 1.5rem !important;
+	font-weight: 600 !important;
+	font-family: inherit !important;
+	cursor: pointer;
+	transition: background-color 0.15s ease, transform 0.1s ease;
+	line-height: 1.2 !important;
+	text-transform: none !important;
+	letter-spacing: 0.02em !important;
+}
+.rasa-co-btn-primary:hover,
+.rasa-co-shell #payment #place_order:hover {
+	background-color: #e5beae !important;
+}
+.rasa-co-shell #payment #place_order {
+	width: 100%;
+	margin-top: 1.6rem;
+}
+
+/* Payment Section (Step 3) — keep inner gateway widgets high-contrast */
+.rasa-co-payment-box #payment {
+	background: transparent !important;
+	border-radius: 6px;
+}
+.rasa-co-payment-box #payment ul.payment_methods {
+	list-style: none;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: 1px solid rgba(255, 255, 255, 0.18) !important;
+	border-radius: 6px;
+	overflow: hidden;
+	background: #221b1b;
+}
+.rasa-co-payment-box #payment ul.payment_methods li.wc_payment_method,
+.rasa-co-payment-box #payment ul.payment_methods li.woocommerce-notice {
+	margin: 0 !important;
+	padding: 0 !important;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.rasa-co-payment-box #payment ul.payment_methods li:last-child {
+	border-bottom: 0 !important;
+}
+.rasa-co-payment-box #payment ul.payment_methods li.wc_payment_method > input.input-radio {
+	position: relative;
+	margin: 1.6rem 0 0 1.6rem;
+	accent-color: #d8a995;
+	cursor: pointer;
+}
+.rasa-co-payment-box #payment ul.payment_methods li.wc_payment_method > label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.8rem;
+	padding: 1.4rem 1.6rem 1.4rem 0.6rem;
+	color: #f5f0ee;
+	font-size: 1.45rem;
+	font-weight: 500;
+	cursor: pointer;
+}
+.rasa-co-payment-box #payment ul.payment_methods li.wc_payment_method > label img {
+	max-height: 2.2rem;
+	width: auto;
+}
+.rasa-co-payment-box #payment div.payment_box {
+	background: #f8f6f5 !important;
+	color: #1a1414 !important;
+	margin: 0 !important;
+	padding: 1.6rem !important;
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	font-size: 1.35rem;
+	line-height: 1.5;
+}
+.rasa-co-payment-box #payment div.payment_box::before {
+	display: none !important;
+}
+.rasa-co-payment-box #payment .form-row.place-order {
+	padding: 1.8rem 0 0 !important;
+	margin: 0 !important;
+}
+.rasa-co-payment-box .woocommerce-terms-and-conditions-wrapper,
+.rasa-co-payment-box .woocommerce-privacy-policy-text {
+	font-size: 1.25rem;
+	color: rgba(245, 240, 238, 0.72);
+	line-height: 1.5;
+}
+.rasa-co-payment-box .woocommerce-terms-and-conditions-wrapper a,
+.rasa-co-payment-box .woocommerce-privacy-policy-text a {
+	color: #d8a995;
+}
+.rasa-co-payment-box ul.payment_methods .woocommerce-info {
+	padding: 1.6rem !important;
+	border: 0 !important;
+	background: transparent !important;
+}
+
+/* Legal Footer Links inside Left Column */
+.rasa-co-legal-footer {
+	margin-top: 4.4rem;
+	padding-top: 1.8rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.12);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem 1rem;
+	font-size: 1.2rem;
+	color: rgba(245, 240, 238, 0.5);
+}
+.rasa-co-legal-footer a {
+	color: #d8a995;
+	text-decoration: underline;
+	text-underline-offset: 0.25rem;
+}
+
+/* Right Column: Order Summary / Cart */
+.rasa-co-items {
+	list-style: none;
+	margin: 0 0 2rem;
+	padding: 0;
+	display: grid;
+	gap: 1.4rem;
+}
+.rasa-co-item {
+	display: grid;
+	grid-template-columns: 6.4rem minmax(0, 1fr) auto;
+	gap: 1.4rem;
+	align-items: center;
+}
+.rasa-co-item__media {
+	position: relative;
+	width: 6.4rem;
+	height: 6.4rem;
+	background: #241e1e;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	border-radius: 8px;
+}
+.rasa-co-item__img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 7px;
+	display: block;
+}
+.rasa-co-item__badge {
+	position: absolute;
+	top: -0.7rem;
+	right: -0.7rem;
+	min-width: 2rem;
+	height: 2rem;
+	padding: 0 0.5rem;
+	border-radius: 99px;
+	background: rgba(114, 103, 100, 0.95);
+	color: #fff;
+	font-size: 1.15rem;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+}
+.rasa-co-item__title {
+	font-size: 1.4rem;
+	font-weight: 500;
+	color: #f5f0ee;
+}
+.rasa-co-item__meta {
+	font-size: 1.25rem;
+	color: rgba(245, 240, 238, 0.62);
+	margin-top: 0.25rem;
+}
+.rasa-co-item__price {
+	font-size: 1.4rem;
+	color: #f5f0ee;
+	white-space: nowrap;
+}
+
+/* Coupon Box */
+.rasa-co-coupon {
+	display: flex;
+	gap: 1rem;
+	margin: 0 0 1.6rem;
+	padding-bottom: 1.8rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.rasa-co-coupon__input {
+	flex: 1;
+	background: #1b1515;
+	color: #f5f0ee;
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	border-radius: 6px;
+	padding: 1.1rem 1.3rem;
+	font-size: 1.35rem;
+	font-family: inherit;
+	outline: none;
+}
+.rasa-co-coupon__input:focus {
+	border-color: #d8a995;
+}
+.rasa-co-coupon__btn {
+	background: rgba(255, 255, 255, 0.08);
+	color: #f5f0ee;
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	border-radius: 6px;
+	padding: 0 1.8rem;
+	font-size: 1.35rem;
+	font-weight: 500;
+	font-family: inherit;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+.rasa-co-coupon__btn:hover {
+	background: rgba(255, 255, 255, 0.16);
+}
+.rasa-co-coupon__msg {
+	font-size: 1.25rem;
+	margin: -0.8rem 0 1.4rem;
+	color: #d8a995;
+}
+
+/* Totals Summary */
+.rasa-co-totals {
+	display: grid;
+	gap: 0.9rem;
+	padding-top: 0.4rem;
+}
+.rasa-co-total-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	font-size: 1.4rem;
+	color: rgba(245, 240, 238, 0.85);
+}
+.rasa-co-total-shipping {
+	font-size: 1.3rem;
+	color: rgba(245, 240, 238, 0.65);
+}
+.rasa-co-total-row--discount a.woocommerce-remove-coupon {
+	color: #d8a995;
+	font-size: 1.2rem;
+	margin-left: 0.5rem;
+}
+.rasa-co-total-row--grand {
+	margin-top: 0.6rem;
+	padding-top: 1.4rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.14);
+	align-items: baseline;
+}
+.rasa-co-grand-label {
+	font-size: 1.7rem;
+	font-weight: 600;
+	color: #f5f0ee;
+}
+.rasa-co-grand-val {
+	font-size: 1.9rem;
+	font-weight: 600;
+	color: #f5f0ee;
+}
+.rasa-co-grand-val small {
+	font-size: 1.2rem;
+	font-weight: 400;
+	color: rgba(245, 240, 238, 0.6);
+	margin-right: 0.5rem;
+}
+.rasa-co-tax-note {
+	font-size: 1.2rem;
+	color: rgba(245, 240, 238, 0.55);
+	margin-top: -0.3rem;
+}
+
+/* Thank You / Order Received Shell */
+.rasa-co-thankyou-shell {
+	max-width: 78rem;
+	margin: 4rem auto;
+	padding: 0 2rem 6rem;
+}
+.rasa-co-thankyou-shell .woocommerce-order {
+	background: #221b1b;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	border-radius: 8px;
+	padding: 2.8rem;
+	color: #f5f0ee;
+}
+.rasa-co-thankyou-shell h2,
+.rasa-co-thankyou-shell h3 {
+	color: #f5f0ee;
+}
+.rasa-co-thankyou-shell table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.rasa-co-thankyou-shell th,
+.rasa-co-thankyou-shell td {
+	border-color: rgba(255, 255, 255, 0.12) !important;
+	padding: 1rem 0.6rem !important;
+	color: #f5f0ee;
+}
+
+/* Mobile & Tablet Responsive (< 960px) */
+@media screen and (max-width: 959px) {
+	.rasa-co-mobile-bar {
+		display: block;
+	}
+	.rasa-co-grid {
+		grid-template-columns: minmax(0, 1fr);
+		min-height: auto;
+	}
+	.rasa-co-right {
+		display: none;
+		padding: 2rem;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+	}
+	.rasa-co-right.is-open {
+		display: block;
+		order: -1;
+	}
+	.rasa-co-right__inner {
+		max-width: 100%;
+		margin: 0;
+		position: static;
+	}
+	.rasa-co-left {
+		padding: 2.4rem 2rem 4rem;
+		border-right: 0;
+	}
+	.rasa-co-left__inner {
+		max-width: 100%;
+		margin: 0;
+	}
+}
+@media screen and (max-width: 599px) {
+	.rasa-co-fields .form-row.form-row-first,
+	.rasa-co-fields .form-row.form-row-last {
+		width: 100% !important;
+	}
+	.rasa-co-actions {
+		flex-direction: column-reverse;
+		align-items: stretch;
+	}
+	.rasa-co-btn-primary {
+		width: 100%;
+		text-align: center;
+	}
+	.rasa-co-back-link {
+		justify-content: center;
+		padding: 0.6rem 0;
+	}
+	.rasa-co-recap__row {
+		grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+		gap: 0.8rem;
+		padding: 1rem 1.2rem;
+	}
+}

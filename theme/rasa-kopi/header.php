@@ -23,6 +23,20 @@ $announcements = rasa_announcements();
 
 <a class="skip-to-content-link button visually-hidden" href="#MainContent"><?php esc_html_e( 'Direkt zum Inhalt', 'rasa-kopi' ); ?></a>
 
+<?php if ( function_exists( 'is_checkout' ) && is_checkout() ) : ?>
+<header class="rasa-co-header" role="banner">
+	<div class="rasa-co-header__inner">
+		<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="rasa-co-logo-link" aria-label="Rasa Kopi">
+			<img src="<?php echo esc_url( RASA_URI . '/assets/img/logo.png' ); ?>" alt="Rasa Kopi" class="rasa-co-logo" width="160" height="38">
+		</a>
+	</div>
+</header>
+<main id="MainContent" class="content rasa-co-main-shell" role="main" tabindex="-1">
+<?php
+	return;
+endif;
+?>
+
 <!-- ===================== ANNOUNCEMENT BAR (marquee) ===================== -->
 <div class="utility-bar color-scheme-6 gradient utility-bar--bottom-border">
 	<div class="page-width utility-bar__grid">

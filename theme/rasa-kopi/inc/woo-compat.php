@@ -90,3 +90,112 @@ add_filter( 'default_checkout_billing_country', function () {
 add_filter( 'default_checkout_shipping_country', function () {
 	return 'DE';
 } );
+
+/* ------------------------------------------------------------------ *
+ * Shopify Checkout parity: fields, layout hooks & shipping fragments
+ * ------------------------------------------------------------------ */
+add_filter( 'woocommerce_ship_to_different_address_checked', '__return_false' );
+add_filter( 'woocommerce_enable_order_notes_field', '__return_true' );
+
+add_filter( 'woocommerce_order_button_text', function () {
+	return function_exists( 'rasa_tr' ) ? rasa_tr( 'Jetzt bezahlen', 'Pay now' ) : 'Jetzt bezahlen';
+} );
+
+// Pindahkan payment section dari #order_review kanan ke Step 3 kiri (form-checkout.php)
+remove_action( 'woocommerce_checkout_order_review', 'woocommerce_checkout_payment', 20 );
+
+// Sinkronisasi shipping options di Step 2 via WooCommerce AJAX update_order_review
+add_filter( 'woocommerce_update_order_review_fragments', function ( $fragments ) {
+	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return $fragments;
+	}
+	ob_start();
+	?>
+	<div id="RasaCoStep2Shipping" class="rasa-co-shipping-box">
+		<?php if ( WC()->cart->needs_shipping() && WC()->cart->show_shipping() ) : ?>
+			<table class="rasa-co-shipping-table">
+				<?php wc_cart_totals_shipping_html(); ?>
+			</table>
+		<?php else : ?>
+			<p class="rasa-co-muted"><?php echo esc_html( rasa_tr( 'Für diese Bestellung ist kein Versand erforderlich.', 'No shipping required for this order.' ) ); ?></p>
+		<?php endif; ?>
+	</div>
+	<?php
+	$fragments['#RasaCoStep2Shipping'] = ob_get_clean();
+
+	ob_start();
+	echo '<span id="RasaCoMobileSummaryTotal">' . esc_html( function_exists( 'rasa_format_eur' ) ? rasa_format_eur( WC()->cart->get_total( 'edit' ), true ) : wp_strip_all_tags( WC()->cart->get_total() ) ) . '</span>';
+	$fragments['#RasaCoMobileSummaryTotal'] = ob_get_clean();
+
+	return $fragments;
+} );
+
+// Rapikan susunan & placeholder field billing agar persis Shopify Checkout
+add_filter( 'woocommerce_checkout_fields', function ( $fields ) {
+	if ( isset( $fields['billing']['billing_company'] ) ) {
+		unset( $fields['billing']['billing_company'] );
+	}
+	$tr = function ( $de, $en ) {
+		return function_exists( 'rasa_tr' ) ? rasa_tr( $de, $en ) : $de;
+	};
+	if ( isset( $fields['billing']['billing_email'] ) ) {
+		$fields['billing']['billing_email']['label']       = $tr( 'E-Mail', 'Email' );
+		$fields['billing']['billing_email']['placeholder'] = $tr( 'E-Mail', 'Email' );
+		$fields['billing']['billing_email']['priority']    = 5;
+		$fields['billing']['billing_email']['class']       = array( 'form-row-wide' );
+	}
+	if ( isset( $fields['billing']['billing_country'] ) ) {
+		$fields['billing']['billing_country']['label']    = $tr( 'Land / Region', 'Country / Region' );
+		$fields['billing']['billing_country']['priority'] = 10;
+		$fields['billing']['billing_country']['class']    = array( 'form-row-wide', 'address-field', 'update_totals_on_change' );
+	}
+	if ( isset( $fields['billing']['billing_first_name'] ) ) {
+		$fields['billing']['billing_first_name']['label']       = $tr( 'Vorname', 'First name' );
+		$fields['billing']['billing_first_name']['placeholder'] = $tr( 'Vorname', 'First name' );
+		$fields['billing']['billing_first_name']['priority']    = 20;
+		$fields['billing']['billing_first_name']['class']       = array( 'form-row-first' );
+	}
+	if ( isset( $fields['billing']['billing_last_name'] ) ) {
+		$fields['billing']['billing_last_name']['label']       = $tr( 'Nachname', 'Last name' );
+		$fields['billing']['billing_last_name']['placeholder'] = $tr( 'Nachname', 'Last name' );
+		$fields['billing']['billing_last_name']['priority']    = 30;
+		$fields['billing']['billing_last_name']['class']       = array( 'form-row-last' );
+	}
+	if ( isset( $fields['billing']['billing_address_1'] ) ) {
+		$fields['billing']['billing_address_1']['label']       = $tr( 'Adresse', 'Address' );
+		$fields['billing']['billing_address_1']['placeholder'] = $tr( 'Adresse', 'Address' );
+		$fields['billing']['billing_address_1']['priority']    = 40;
+		$fields['billing']['billing_address_1']['class']       = array( 'form-row-wide', 'address-field' );
+	}
+	if ( isset( $fields['billing']['billing_address_2'] ) ) {
+		$fields['billing']['billing_address_2']['label']       = $tr( 'Wohnung, Etage usw. (optional)', 'Apartment, suite, etc. (optional)' );
+		$fields['billing']['billing_address_2']['placeholder'] = $tr( 'Wohnung, Etage usw. (optional)', 'Apartment, suite, etc. (optional)' );
+		$fields['billing']['billing_address_2']['required']    = false;
+		$fields['billing']['billing_address_2']['priority']    = 50;
+		$fields['billing']['billing_address_2']['class']       = array( 'form-row-wide', 'address-field' );
+	}
+	if ( isset( $fields['billing']['billing_postcode'] ) ) {
+		$fields['billing']['billing_postcode']['label']       = $tr( 'Postleitzahl', 'Postal code' );
+		$fields['billing']['billing_postcode']['placeholder'] = $tr( 'Postleitzahl', 'Postal code' );
+		$fields['billing']['billing_postcode']['priority']    = 60;
+		$fields['billing']['billing_postcode']['class']       = array( 'form-row-first', 'address-field' );
+	}
+	if ( isset( $fields['billing']['billing_city'] ) ) {
+		$fields['billing']['billing_city']['label']       = $tr( 'Stadt', 'City' );
+		$fields['billing']['billing_city']['placeholder'] = $tr( 'Stadt', 'City' );
+		$fields['billing']['billing_city']['priority']    = 70;
+		$fields['billing']['billing_city']['class']       = array( 'form-row-last', 'address-field' );
+	}
+	if ( isset( $fields['billing']['billing_phone'] ) ) {
+		$fields['billing']['billing_phone']['label']       = $tr( 'Telefon (optional)', 'Phone (optional)' );
+		$fields['billing']['billing_phone']['placeholder'] = $tr( 'Telefon (optional)', 'Phone (optional)' );
+		$fields['billing']['billing_phone']['required']    = false;
+		$fields['billing']['billing_phone']['priority']    = 80;
+		$fields['billing']['billing_phone']['class']       = array( 'form-row-wide' );
+	}
+	if ( isset( $fields['order']['order_comments'] ) ) {
+		$fields['order']['order_comments']['label']       = $tr( 'Hinweise zur Bestellung (optional)', 'Order notes (optional)' );
+		$fields['order']['order_comments']['placeholder'] = $tr( 'Hinweise zur Lieferung oder Bestellung...', 'Notes about your order, e.g. special delivery notes...' );
+	}
+	return $fields;
+} );

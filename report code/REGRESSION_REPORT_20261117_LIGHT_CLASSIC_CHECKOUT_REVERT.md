@@ -3,6 +3,7 @@
 - **Tanggal**: 2026-11-17
 - **Repository**: `digitalCommerce` (`dev` branch -> `shop-dev.rasakopi.coffee`)
 - **Theme Version**: `1.0.10` ([functions.php](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/functions.php) & [style.css](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/style.css))
+- **Theme Version**: `1.0.11` ([functions.php](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/functions.php) & [style.css](file:///d:/WORKS/RASAKOPI/DIGITAL/COMMERCE/WOO/digitalCommerce/theme/rasa-kopi/style.css))
 - **Baseline Pembanding**: Commit `ac8c227` (sebelum implementasi dark checkout `da5a4cc`)
 
 ---

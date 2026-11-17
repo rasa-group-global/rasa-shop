@@ -12,6 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('RASA_VERSION', '1.0.10');
+define('RASA_VERSION', '1.0.11');
 define('RASA_DIR', get_template_directory());
 define('RASA_URI', get_template_directory_uri());
 

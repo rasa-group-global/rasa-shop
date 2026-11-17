@@ -15,9 +15,7 @@ if (function_exists('is_cart') && is_cart() && file_exists(RASA_DIR . '/woocomme
 
 if (function_exists('is_checkout') && is_checkout()) {
 	$is_order_received = function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-received');
-	$checkout_title = $is_order_received
-		? (function_exists('rasa_tr') ? rasa_tr('Bestellung erhalten', 'Order received') : get_the_title())
-		: (function_exists('rasa_tr') ? rasa_tr('Kasse', 'Checkout') : get_the_title());
+	$checkout_title = function_exists('rasa_tr') ? rasa_tr('Kasse', 'Checkout') : get_the_title();
 	?>
 	<div class="rasa-page-wrap color-scheme-1 gradient" style="padding: 36px 0 64px;">
 		<div class="page-width">
@@ -26,7 +24,9 @@ if (function_exists('is_checkout') && is_checkout()) {
 					the_post();
 					?>
 					<article class="rasa-page-article color-scheme-1 gradient" style="display:block;width:100%;">
-						<h1 class="h1 article__title" style="margin:0 0 2.4rem;"><?php echo esc_html($checkout_title); ?></h1>
+						<?php if (!$is_order_received): ?>
+							<h1 class="h1 article__title" style="margin:0 0 2.4rem;"><?php echo esc_html($checkout_title); ?></h1>
+						<?php endif; ?>
 					<div class="article__content rasa-checkout-content" style="width:100%;display:block;">
 						<?php the_content(); ?></div>
 				</article>

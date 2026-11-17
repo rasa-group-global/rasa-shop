@@ -537,6 +537,447 @@ body.admin-bar .rasa-cart-drawer {
 	border-radius: 0 !important;
 }
 
+/* ===== Shopify-style Order Received (Thank You) Light Theme ===== */
+.rasa-ty {
+	width: 100%;
+	box-sizing: border-box;
+	color: #121212;
+}
+
+.rasa-ty .woocommerce-notice,
+.rasa-ty .woocommerce-notice::before {
+	background: transparent;
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+
+.rasa-ty .woocommerce-notice::before {
+	display: none !important;
+}
+
+.rasa-ty-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1.45fr) minmax(32rem, 1fr);
+	gap: 4.4rem;
+	align-items: start;
+	width: 100%;
+}
+
+.rasa-ty-main {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
+.rasa-ty-hero {
+	display: flex;
+	align-items: center;
+	gap: 1.6rem;
+	margin-bottom: 0.4rem;
+}
+
+.rasa-ty-hero__icon {
+	flex: 0 0 4.6rem;
+	width: 4.6rem;
+	height: 4.6rem;
+	border-radius: 999px;
+	border: 2px solid #121212;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: #121212;
+	background: #ffffff;
+}
+
+.rasa-ty-hero--failed .rasa-ty-hero__icon {
+	border-color: #b91c1c;
+	color: #b91c1c;
+	background: #fff5f5;
+}
+
+.rasa-ty-hero__kicker {
+	font-size: 1.3rem;
+	color: rgba(18, 18, 18, 0.65);
+	line-height: 1.4;
+	margin-bottom: 0.25rem;
+}
+
+.rasa-ty-hero__title {
+	margin: 0;
+	line-height: 1.2;
+	color: #121212;
+}
+
+.rasa-ty-card {
+	background: #ffffff;
+	border: 1px solid rgba(18, 18, 18, 0.12);
+	border-radius: 6px;
+	padding: 2.2rem 2.4rem;
+	box-sizing: border-box;
+}
+
+.rasa-ty-card--failed {
+	background: #fff5f5;
+	border-color: rgba(185, 28, 28, 0.28);
+}
+
+.rasa-ty-card__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1.2rem;
+	flex-wrap: wrap;
+	margin-bottom: 0.8rem;
+}
+
+.rasa-ty-card__title {
+	margin: 0 0 0.8rem;
+	font-size: 1.7rem;
+	font-weight: 500;
+	color: #121212;
+	line-height: 1.35;
+}
+
+.rasa-ty-card__head .rasa-ty-card__title {
+	margin: 0;
+}
+
+.rasa-ty-card__desc {
+	font-size: 1.4rem;
+	line-height: 1.55;
+	color: rgba(18, 18, 18, 0.78);
+}
+
+.rasa-ty-status {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.35rem 1rem;
+	border-radius: 999px;
+	font-size: 1.2rem;
+	font-weight: 500;
+	background: #f3f3f3;
+	color: #121212;
+	border: 1px solid rgba(18, 18, 18, 0.12);
+}
+
+.rasa-ty-status--processing,
+.rasa-ty-status--completed {
+	background: #eef7f1;
+	color: #166534;
+	border-color: rgba(22, 101, 52, 0.2);
+}
+
+.rasa-ty-details-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 2rem 2.8rem;
+	margin-top: 1.6rem;
+	padding-top: 1.8rem;
+	border-top: 1px solid rgba(18, 18, 18, 0.08);
+}
+
+.rasa-ty-detail__label {
+	margin: 0 0 0.5rem;
+	font-size: 1.2rem;
+	font-weight: 500;
+	color: rgba(18, 18, 18, 0.62);
+	letter-spacing: 0.02em;
+}
+
+.rasa-ty-detail__value,
+.rasa-ty-detail__address {
+	margin: 0;
+	font-style: normal;
+	font-size: 1.4rem;
+	line-height: 1.55;
+	color: #121212;
+	word-break: break-word;
+}
+
+.rasa-ty-detail__sub {
+	display: block;
+	margin-top: 0.25rem;
+	font-size: 1.35rem;
+	color: rgba(18, 18, 18, 0.72);
+}
+
+.rasa-ty-actions,
+.rasa-ty-failed-actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1.6rem;
+	flex-wrap: wrap;
+	margin-top: 0.4rem;
+}
+
+.rasa-ty-failed-actions {
+	justify-content: flex-start;
+	margin-top: 1.6rem;
+}
+
+.rasa-ty-help {
+	margin: 0;
+	font-size: 1.35rem;
+	color: rgba(18, 18, 18, 0.75);
+}
+
+.rasa-ty-help a {
+	color: #121212;
+	margin-left: 0.35rem;
+}
+
+.rasa-ty-btn-primary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 4.8rem;
+	padding: 0 2.8rem;
+	background: #121212 !important;
+	color: #ffffff !important;
+	border: 1px solid #121212;
+	border-radius: 0 !important;
+	font-size: 1.45rem;
+	font-weight: 500;
+	letter-spacing: 0.06rem;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.rasa-ty-btn-primary:hover {
+	background: #2b2b2b !important;
+}
+
+.rasa-ty-btn-secondary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 4.8rem;
+	padding: 0 2.4rem;
+	background: #ffffff !important;
+	color: #121212 !important;
+	border: 1px solid rgba(18, 18, 18, 0.28);
+	border-radius: 0 !important;
+	font-size: 1.45rem;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.rasa-ty-sidebar {
+	min-width: 0;
+	position: sticky;
+	top: 2.4rem;
+}
+
+.rasa-ty-summary-card {
+	background: #ffffff;
+	border: 1px solid rgba(18, 18, 18, 0.12);
+	padding: 2.4rem;
+	box-sizing: border-box;
+}
+
+.rasa-ty-summary-card__title {
+	margin: 0 0 1.8rem;
+	font-size: 1.8rem;
+	font-weight: 400;
+	color: #121212;
+}
+
+.rasa-ty-items {
+	display: flex;
+	flex-direction: column;
+	gap: 1.4rem;
+	padding-bottom: 1.8rem;
+	border-bottom: 1px solid rgba(18, 18, 18, 0.1);
+}
+
+.rasa-ty-item {
+	display: grid;
+	grid-template-columns: 5.6rem minmax(0, 1fr) auto;
+	gap: 1.4rem;
+	align-items: start;
+}
+
+.rasa-ty-item__media {
+	position: relative;
+	width: 5.6rem;
+	height: 5.6rem;
+}
+
+.rasa-ty-item__thumb {
+	width: 5.6rem;
+	height: 5.6rem;
+	border-radius: 6px;
+	overflow: hidden;
+	background: #f6f6f6;
+	border: 1px solid rgba(18, 18, 18, 0.1);
+}
+
+.rasa-ty-item__thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.rasa-ty-item__badge {
+	position: absolute;
+	top: -0.7rem;
+	right: -0.7rem;
+	min-width: 2.1rem;
+	height: 2.1rem;
+	padding: 0 0.5rem;
+	border-radius: 999px;
+	background: #3f3f3f;
+	color: #ffffff;
+	font-size: 1.15rem;
+	font-weight: 600;
+	line-height: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid #ffffff;
+	box-sizing: border-box;
+}
+
+.rasa-ty-item__info {
+	min-width: 0;
+}
+
+.rasa-ty-item__title {
+	font-size: 1.4rem;
+	font-weight: 500;
+	line-height: 1.35;
+	color: #121212;
+}
+
+.rasa-ty-item__title a {
+	color: #121212;
+	text-decoration: none;
+}
+
+.rasa-ty-item__title a:hover {
+	text-decoration: underline;
+}
+
+.rasa-ty-item__meta {
+	margin-top: 0.3rem;
+	font-size: 1.25rem;
+	color: rgba(18, 18, 18, 0.65);
+	line-height: 1.4;
+}
+
+.rasa-ty-item__meta .wc-item-meta {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.rasa-ty-item__meta .wc-item-meta li {
+	margin: 0;
+}
+
+.rasa-ty-item__meta .wc-item-meta p,
+.rasa-ty-item__meta .wc-item-meta strong {
+	display: inline;
+	margin: 0;
+	font-weight: 400;
+}
+
+.rasa-ty-item__price {
+	font-size: 1.45rem;
+	font-weight: 500;
+	color: #121212;
+	white-space: nowrap;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.rasa-ty-totals {
+	margin: 1.6rem 0 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.9rem;
+}
+
+.rasa-ty-totals__row {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 1.2rem;
+	font-size: 1.4rem;
+	color: rgba(18, 18, 18, 0.78);
+}
+
+.rasa-ty-totals__row dt,
+.rasa-ty-totals__row dd {
+	margin: 0;
+}
+
+.rasa-ty-totals__row dd {
+	font-variant-numeric: tabular-nums;
+	color: #121212;
+	text-align: right;
+}
+
+.rasa-ty-totals__row--grand {
+	margin-top: 0.8rem;
+	padding-top: 1.4rem;
+	border-top: 1px solid rgba(18, 18, 18, 0.12);
+	font-size: 1.75rem;
+	font-weight: 600;
+	color: #121212;
+}
+
+.rasa-ty-summary-note {
+	margin-top: 1.4rem;
+	padding-top: 1.2rem;
+	border-top: 1px solid rgba(18, 18, 18, 0.08);
+	font-size: 1.3rem;
+	color: rgba(18, 18, 18, 0.72);
+	display: flex;
+	gap: 0.6rem;
+}
+
+.rasa-ty-gateway-extra:empty {
+	display: none;
+}
+
+.rasa-ty-empty {
+	background: #ffffff;
+	border: 1px solid rgba(18, 18, 18, 0.12);
+	border-radius: 6px;
+	padding: 3rem;
+	max-width: 64rem;
+}
+
+@media screen and (max-width: 899px) {
+	.rasa-ty-grid {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 2.4rem;
+	}
+
+	.rasa-ty-sidebar {
+		position: static;
+	}
+
+	.rasa-ty-card,
+	.rasa-ty-summary-card {
+		padding: 1.8rem;
+	}
+
+	.rasa-ty-details-grid {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1.6rem;
+	}
+
+	.rasa-ty-actions .rasa-ty-btn-primary {
+		width: 100%;
+	}
+}
+
 /* ===== Hide default WooCommerce storefront alert/notice banners ===== */
 body:not(.woocommerce-checkout):not(.woocommerce-account) .woocommerce-notices-wrapper,
 body:not(.woocommerce-checkout):not(.woocommerce-account) .woocommerce-message,

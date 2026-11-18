@@ -1,7 +1,7 @@
-# Regression Report — Block Checkout Field Notice & Quirks-Mode Black Viewport Fix (`1.0.18`)
+# Regression Report — Checkout Field, Quirks Black Screen & AJAX Add-to-Cart Redirect Fix (`1.0.19`)
 
 **Date**: 2026-11-19  
-**Theme Version**: `1.0.18`  
+**Theme Version**: `1.0.19`  
 **Regression Script**: [`tests/regression_check.py`](../tests/regression_check.py)
 
 ---
@@ -31,7 +31,10 @@
 - [`scripts/first-run.sh`](../scripts/first-run.sh):
   - Aligned `woocommerce_currency_pos` to `'right_space'` matching `EUR` DE price formatting.
 - [`theme/rasa-kopi/functions.php`](../theme/rasa-kopi/functions.php) & [`theme/rasa-kopi/style.css`](../theme/rasa-kopi/style.css):
-  - Bumped theme version to `1.0.18`.
+  - Bumped theme version to `1.0.19`.
+- **Issue 3 Fix (PDP Add to Cart — `Invalid response` caused by `302` redirect on `?wc-ajax=rasa_add_to_cart`)**:
+  - Root cause: `woocommerce/single-product.php` includes `<input type="hidden" name="add-to-cart">` inside `#RasaPdpForm`, and [`theme/rasa-kopi/assets/js/rasa-shim.js`](../theme/rasa-kopi/assets/js/rasa-shim.js) sent `new FormData(pdpForm)` (with `add-to-cart`) to `?wc-ajax=rasa_add_to_cart`. WooCommerce's `WC_Form_Handler::add_to_cart_action()` runs on `wp_loaded` (priority `20`, before `WC_AJAX` at `template_redirect`), intercepted `$_REQUEST['add-to-cart']`, and triggered [`theme/rasa-kopi/inc/woo-compat.php`](../theme/rasa-kopi/inc/woo-compat.php)'s `woocommerce_add_to_cart_redirect` filter (`wp_safe_redirect()` -> `HTTP 302` HTML instead of JSON).
+  - Fix: `rasa-shim.js` calls `fd.delete('add-to-cart')` before posting to `?wc-ajax=rasa_add_to_cart`, and `woo-compat.php` unhooks `WC_Form_Handler::add_to_cart_action` and returns `false` in `woocommerce_add_to_cart_redirect` when `?wc-ajax=` or `wp_doing_ajax()` is active (preserving non-AJAX `<noscript>` form submit).
 
 ---
 
@@ -40,4 +43,5 @@
 Future pre-push checks now permanently enforce:
 1. **Additional Checkout Fields Contract**: Fails if `'attributes'` contains any non-whitelisted key (`placeholder`, `maxlength`, `class`, `style`, `inputmode`, etc.), if `'placeholder'` appears anywhere in registration, or if `'validate_callback'` calls `->add(` instead of returning `new WP_Error(...)` and `true`.
 2. **Early-Output & Quirks-Mode Traps**: Fails on UTF-8 BOM, leading whitespace before `<?php`, trailing `?>` in library files (`functions.php`, `inc/*.php`), direct output in `init`/`woocommerce_init`/`plugins_loaded`/`after_setup_theme`, HTML before `<!doctype html>`, or missing `height: auto !important` on `.utility-bar` in `header.php`.
-3. **Full Theme, Shell & Config Parity**: Single theme version check, Light Block Checkout + Shopify `thankyou.php` checks, strict CSS brace & section-reset check, PHP balance check across all 14 files, heredoc/inline PHP balance + LF checks across `setup/settings.sh` and `scripts/first-run.sh`, YAML + Nginx `/wp-json/`, `docs/settings.md`, and secret hygiene.
+3. **AJAX Add-to-Cart 302 Guard**: Enforces `fd.delete('add-to-cart')` in `rasa-shim.js` and `remove_action('wp_loaded', ['WC_Form_Handler', 'add_to_cart_action'], 20)` + AJAX guard on `woocommerce_add_to_cart_redirect` in `woo-compat.php`.
+4. **Full Theme, Shell & Config Parity**: Single theme version check (`1.0.19`), Light Block Checkout + Shopify `thankyou.php` checks, strict CSS brace & section-reset check, PHP balance check across all 14 files, heredoc/inline PHP balance + LF checks across `setup/settings.sh` and `scripts/first-run.sh`, YAML + Nginx `/wp-json/`, `docs/settings.md`, and secret hygiene.

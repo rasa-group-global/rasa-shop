@@ -51,7 +51,18 @@ add_filter( 'woocommerce_pagination', function ( $html ) {
  * Add-to-cart AJAX redirect — tetap di halaman (cart drawer)
  * & hapus alert notice bawaan WooCommerce ("added to your cart")
  * ------------------------------------------------------------------ */
+add_action( 'wp_loaded', function () {
+	// Never let synchronous WC_Form_Handler intercept ?wc-ajax= endpoints and 302-redirect JSON fetch calls.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( ! empty( $_GET['wc-ajax'] ) || wp_doing_ajax() ) {
+		remove_action( 'wp_loaded', array( 'WC_Form_Handler', 'add_to_cart_action' ), 20 );
+	}
+}, 5 );
 add_filter( 'woocommerce_add_to_cart_redirect', function () {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( ! empty( $_GET['wc-ajax'] ) || wp_doing_ajax() ) {
+		return false;
+	}
 	return wp_get_referer() ? wp_get_referer() : home_url( '/' );
 } );
 add_filter( 'wc_add_to_cart_message_html', '__return_empty_string' );

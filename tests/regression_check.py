@@ -401,6 +401,20 @@ def main() -> None:
 
     print('All store settings baseline, shell heredocs, custom fields & secret hygiene checks: OK')
 
+    print('\n=== 7. AJAX ADD-TO-CART REDIRECT & FORM HANDLER GUARD ===')
+    shim_src = open(os.path.join(ROOT, 'theme/rasa-kopi/assets/js/rasa-shim.js'), 'r', encoding='utf-8').read()
+    assert "fd.delete('add-to-cart')" in shim_src, (
+        "rasa-shim.js must delete 'add-to-cart' from FormData before posting to ?wc-ajax=rasa_add_to_cart"
+    )
+    woo_compat = open(os.path.join(ROOT, 'theme/rasa-kopi/inc/woo-compat.php'), 'r', encoding='utf-8').read()
+    assert "remove_action( 'wp_loaded', array( 'WC_Form_Handler', 'add_to_cart_action' ), 20 )" in woo_compat, (
+        'woo-compat.php must disable WC_Form_Handler::add_to_cart_action on wc-ajax/ajax requests'
+    )
+    assert re.search(r"woocommerce_add_to_cart_redirect.*?(?:\$_GET\['wc-ajax'\]|wp_doing_ajax)", woo_compat, re.S), (
+        'woocommerce_add_to_cart_redirect must return false on wc-ajax/ajax requests'
+    )
+    print('AJAX add-to-cart 302-redirect & WC_Form_Handler collision guard: OK')
+
 
 if __name__ == '__main__':
     main()

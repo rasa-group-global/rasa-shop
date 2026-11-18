@@ -392,6 +392,8 @@
 			if (!fd.get('product_id') && fd.get('add-to-cart')) {
 				fd.set('product_id', fd.get('add-to-cart'));
 			}
+			// Prevent WC_Form_Handler::add_to_cart_action from intercepting ?wc-ajax= with a 302 redirect.
+			fd.delete('add-to-cart');
 
 			fetch(getEndpoint('rasa_add_to_cart'), { method: 'POST', body: fd, credentials: 'same-origin' })
 				.then(parseJsonResponse)

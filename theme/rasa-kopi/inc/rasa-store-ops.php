@@ -31,7 +31,7 @@ define( 'RASA_META_VAT_ID', '_rasa_vat_id' );
  * Check whether the current logged-in user holds the B2B customer role.
  */
 function rasa_is_b2b_customer() {
-	if ( ! is_user_logged_in() ) {
+	if ( ! function_exists( 'is_user_logged_in' ) || ! function_exists( 'wp_get_current_user' ) || ! is_user_logged_in() ) {
 		return false;
 	}
 	$user = wp_get_current_user();
@@ -159,14 +159,14 @@ add_action( 'woocommerce_init', function () {
 		'type'              => 'text',
 		'required'          => false,
 		'attributes'        => array(
-			'autocomplete' => 'off',
-			'placeholder'  => 'DE123456789',
+			'autocomplete'   => 'off',
+			'autocapitalize' => 'characters',
 		),
 		'sanitize_callback' => 'rasa_sanitize_vat_id',
-		'validate_callback' => function ( $value, $errors ) {
+		'validate_callback' => function ( $value ) {
 			$clean = rasa_sanitize_vat_id( $value );
-			if ( '' !== $clean && ! rasa_is_valid_vat_id_format( $clean ) && is_wp_error( $errors ) ) {
-				$errors->add(
+			if ( '' !== $clean && ! rasa_is_valid_vat_id_format( $clean ) ) {
+				return new WP_Error(
 					'rasa_invalid_vat_id',
 					rasa_ops_tr(
 						'Bitte gib eine gültige EU USt-IdNr. ein (z. B. DE123456789).',
@@ -174,6 +174,7 @@ add_action( 'woocommerce_init', function () {
 					)
 				);
 			}
+			return true;
 		},
 	) );
 } );
@@ -329,7 +330,7 @@ add_filter( 'woocommerce_package_rates', function ( $rates, $package ) {
 		}
 
 		$rate_taxes = $rate->get_taxes();
-		$tax_rates  = WC_Tax::get_shipping_tax_rates();
+		$tax_rates  = ( function_exists( 'WC' ) && WC()->cart ) ? WC_Tax::get_shipping_tax_rates() : array();
 
 		if ( ! empty( $rate_taxes ) && ! empty( $tax_rates ) ) {
 			$inclusive_taxes = WC_Tax::calc_inclusive_tax( $gross_cost, $tax_rates );

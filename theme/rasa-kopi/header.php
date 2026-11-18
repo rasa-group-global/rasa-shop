@@ -51,6 +51,7 @@ $announcements = rasa_announcements();
 <style>
 	/* RASA: black bar + rose gold text (persis live shop.rasakopi.coffee) */
 	.utility-bar {
+		height: auto !important;
 		background: #000000 !important;
 		--color-foreground: 237, 192, 174;
 		color: #edc0ae;

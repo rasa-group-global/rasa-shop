@@ -74,7 +74,7 @@ WP plugin install revolut-gateway-for-woocommerce --activate || true
 
 echo "▸ WooCommerce settings (EUR)..."
 WP option update woocommerce_currency 'EUR'
-WP option update woocommerce_currency_pos 'left'
+WP option update woocommerce_currency_pos 'right_space'
 WP option update woocommerce_price_thousand_sep '.'
 WP option update woocommerce_price_decimal_sep ','
 WP option update woocommerce_price_num_decimals '2'

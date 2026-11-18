@@ -58,10 +58,11 @@ function rasa_price_html( $product, $args = array() ) {
 
 	// Variable product: parent price kosong — pakai "Von" (min variation price), persis Dawn
 	// NOTE: num_variations() tidak ada di Woo 11.x — pakai get_children()
+	// $for_display = true obeys incl/excl VAT display (B2C incl vs B2B net).
 	$price_html = '';
 	if ( $product->is_type( 'variable' ) && count( $product->get_children() ) > 0 ) {
-		$min = (float) $product->get_variation_price( 'min' );
-		$max = (float) $product->get_variation_price( 'max' );
+		$min = (float) $product->get_variation_price( 'min', true );
+		$max = (float) $product->get_variation_price( 'max', true );
 		if ( $min > 0 && $min === $max ) {
 			$price_html = $fmt( $min );
 		} elseif ( $min > 0 ) {
@@ -70,9 +71,11 @@ function rasa_price_html( $product, $args = array() ) {
 			$price_html = '';
 		}
 	} else {
-		$regular = (float) $product->get_regular_price();
-		$sale    = $product->get_sale_price() !== '' ? (float) $product->get_sale_price() : 0;
-		$price   = $sale > 0 ? $sale : $regular;
+		$regular_raw = $product->get_regular_price();
+		$sale_raw    = $product->get_sale_price();
+		$regular     = '' !== $regular_raw ? (float) wc_get_price_to_display( $product, array( 'price' => (float) $regular_raw ) ) : 0.0;
+		$sale        = '' !== $sale_raw ? (float) wc_get_price_to_display( $product, array( 'price' => (float) $sale_raw ) ) : 0.0;
+		$price       = $sale > 0 ? $sale : $regular;
 		if ( $on_sale && $show_compare ) {
 			$price_html = '<span class="visually-hidden visually-hidden--inline">' . esc_html( rasa_tr( 'Normaler Preis', 'Regular price' ) ) . '</span>'
 				. '<span><s class="price-item price-item--regular">' . wp_kses_post( $fmt( $regular ) ) . '</s></span>'
@@ -352,7 +355,9 @@ function rasa_get_products_by_cat( $cat, $limit = 4, $order = 'DESC' ) {
  * ------------------------------------------------------------------ */
 function rasa_free_shipping_bar( $cart_total = null, $country = 'DE' ) {
 	if ( null === $cart_total && function_exists( 'WC' ) && WC()->cart ) {
-		$cart_total = (float) WC()->cart->get_subtotal_excluding_tax();
+		$cart_total = WC()->cart->display_prices_including_tax()
+			? ( (float) WC()->cart->get_subtotal() + (float) WC()->cart->get_subtotal_tax() )
+			: (float) WC()->cart->get_subtotal();
 	}
 	if ( $cart_total <= 0 ) return;
 	$threshold = ( $country === 'AT' ) ? 89.0 : 59.0;

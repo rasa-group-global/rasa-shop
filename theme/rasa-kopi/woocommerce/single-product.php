@@ -62,9 +62,17 @@ while ( have_posts() ) :
 						</div>
 					</div>
 
+					<?php
+					$rasa_unit_price_html = function_exists( 'rasa_get_product_unit_price_html' ) ? rasa_get_product_unit_price_html( $product ) : '';
+					$rasa_is_b2b          = function_exists( 'rasa_is_b2b_customer' ) && rasa_is_b2b_customer();
+					$rasa_delivery_time   = function_exists( 'rasa_get_product_delivery_time' ) ? rasa_get_product_delivery_time( $product ) : rasa_tr( '3–7 Werktage', '3–7 business days' );
+					?>
 					<div class="rasa-price-note" style="font-size:1.2rem;line-height:1.6;color:rgba(0,0,0,0.75);margin-bottom:2rem;">
-						<div><?php echo esc_html( rasa_tr( 'inkl. MwSt., zzgl.', 'incl. VAT, plus' ) ); ?> <a href="<?php echo esc_url( $shipping_url ); ?>" style="color:inherit;text-decoration:underline;text-underline-offset:.3rem;"><?php echo esc_html( rasa_tr( 'Versandkosten', 'shipping' ) ); ?></a></div>
-						<div><?php echo esc_html( rasa_tr( 'Lieferzeit: 3–7 Werktage', 'Delivery time: 3–7 business days' ) ); ?></div>
+						<?php if ( '' !== $rasa_unit_price_html ) : ?>
+							<div class="rasa-unit-price-row"><?php echo $rasa_unit_price_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+						<?php endif; ?>
+						<div><?php echo esc_html( $rasa_is_b2b ? rasa_tr( 'zzgl. MwSt., zzgl.', 'excl. VAT, plus' ) : rasa_tr( 'inkl. MwSt., zzgl.', 'incl. VAT, plus' ) ); ?> <a href="<?php echo esc_url( $shipping_url ); ?>" style="color:inherit;text-decoration:underline;text-underline-offset:.3rem;"><?php echo esc_html( rasa_tr( 'Versandkosten', 'shipping' ) ); ?></a></div>
+						<div><?php echo esc_html( rasa_tr( 'Lieferzeit:', 'Delivery time:' ) . ' ' . $rasa_delivery_time ); ?></div>
 					</div>
 
 					<form class="cart" action="<?php echo esc_url( apply_filters( 'woocommerce_add_to_cart_form_action', $product->get_permalink() ) ); ?>" method="post" enctype="multipart/form-data" id="RasaPdpForm">

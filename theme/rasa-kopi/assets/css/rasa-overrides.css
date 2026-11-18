@@ -370,18 +370,66 @@ body.admin-bar .rasa-cart-drawer {
 	margin-top: 1.2rem;
 }
 
-.rasa-cart-drawer .cart__checkout-button {
-	width: 100%;
-	min-height: 4.8rem;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	background: #121212;
-	color: #fff;
-	text-decoration: none;
-	font-size: 1.5rem;
-	letter-spacing: 0.08rem;
-	margin-top: 1.2rem;
+.woocommerce .rasa-cart-drawer a.button.cart__checkout-button,
+.rasa-cart-drawer a.button.cart__checkout-button,
+.rasa-cart-drawer .cart__checkout-button,
+.woocommerce .rasa-cart-page a.button.cart__checkout-button,
+.rasa-cart-page a.button.cart__checkout-button,
+.rasa-cart-page .cart__checkout-button,
+.woocommerce .rasa-cart-page .cart__warnings a.button,
+.rasa-cart-page .cart__warnings a.button {
+	width: 100% !important;
+	max-width: 100% !important;
+	min-height: 4.8rem !important;
+	padding: 0 2.4rem !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	text-align: center !important;
+	background: #121212 !important;
+	background-color: #121212 !important;
+	color: #ffffff !important;
+	border: 1px solid #121212 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	text-decoration: none !important;
+	font-size: 1.5rem !important;
+	font-weight: 500 !important;
+	line-height: 1.2 !important;
+	letter-spacing: 0.08rem !important;
+	box-sizing: border-box !important;
+	margin: 1.2rem 0 0 !important;
+	cursor: pointer;
+	transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.woocommerce .rasa-cart-page .cart__warnings a.button,
+.rasa-cart-page .cart__warnings a.button {
+	width: auto !important;
+	padding: 0 3.2rem !important;
+}
+
+.woocommerce .rasa-cart-drawer a.button.cart__checkout-button:hover,
+.rasa-cart-drawer a.button.cart__checkout-button:hover,
+.rasa-cart-drawer .cart__checkout-button:hover,
+.woocommerce .rasa-cart-page a.button.cart__checkout-button:hover,
+.rasa-cart-page a.button.cart__checkout-button:hover,
+.rasa-cart-page .cart__checkout-button:hover,
+.woocommerce .rasa-cart-page .cart__warnings a.button:hover,
+.rasa-cart-page .cart__warnings a.button:hover {
+	background: #2b2b2b !important;
+	background-color: #2b2b2b !important;
+	color: #ffffff !important;
+}
+
+.rasa-cart-drawer .cart__checkout-button::before,
+.rasa-cart-drawer .cart__checkout-button::after,
+.rasa-cart-page .cart__checkout-button::before,
+.rasa-cart-page .cart__checkout-button::after,
+.rasa-cart-page .cart__warnings a.button::before,
+.rasa-cart-page .cart__warnings a.button::after {
+	display: none !important;
+	content: none !important;
 }
 
 /* Hide TranslatePress default floating language switcher */

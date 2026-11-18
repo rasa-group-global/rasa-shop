@@ -305,7 +305,14 @@ def main() -> None:
     verify_css_file(os.path.join(ROOT, 'theme/rasa-kopi/inc/tokens.css'), allow_nesting=False)
     verify_css_file(os.path.join(ROOT, 'theme/rasa-kopi/inc/fonts.css'), allow_nesting=False)
     ovr = open(os.path.join(css_dir, 'rasa-overrides.css'), 'r', encoding='utf-8').read()
-    for cls in ('.wc-block-components-sidebar-layout.wc-block-checkout', '.wc-block-checkout__sidebar', '.rasa-ty-grid', '.rasa-ty-summary-card'):
+    for cls in (
+        '.wc-block-components-sidebar-layout.wc-block-checkout',
+        '.wc-block-checkout__sidebar',
+        '.rasa-ty-grid',
+        '.rasa-ty-summary-card',
+        '.woocommerce .rasa-cart-drawer a.button.cart__checkout-button',
+        '.rasa-cart-drawer .cart__checkout-button::after',
+    ):
         assert cls in ovr, f'Missing {cls} in rasa-overrides.css'
     print('Strict CSS parser passed on all stylesheets: OK')
 

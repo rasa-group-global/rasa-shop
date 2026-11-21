@@ -72,7 +72,12 @@ WP plugin install translatepress-multilingual --activate || true
 echo "▸ Install Revolut Gateway for WooCommerce..."
 WP plugin install revolut-gateway-for-woocommerce --activate || true
 
-echo "▸ WooCommerce settings (EUR)..."
+echo "▸ WooCommerce settings (EUR & Germany base)..."
+WP option update woocommerce_default_country 'DE'
+WP option update woocommerce_default_customer_address 'base'
+WP option update woocommerce_shipping_cost_requires_address 'no'
+WP option update woocommerce_store_city 'Berlin'
+WP option update woocommerce_store_postcode '10405'
 WP option update woocommerce_currency 'EUR'
 WP option update woocommerce_currency_pos 'right_space'
 WP option update woocommerce_price_thousand_sep '.'

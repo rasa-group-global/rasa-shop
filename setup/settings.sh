@@ -62,6 +62,9 @@ WP option update woocommerce_calc_taxes 'yes'
 WP option update woocommerce_prices_include_tax 'yes'
 WP option update woocommerce_tax_based_on 'shipping'
 WP option update woocommerce_default_customer_address 'base'
+WP option update woocommerce_shipping_cost_requires_address 'no'
+WP option update woocommerce_store_city 'Berlin'
+WP option update woocommerce_store_postcode '10405'
 WP option update woocommerce_tax_round_at_subtotal 'no'
 WP option update woocommerce_shipping_tax_class 'inherit'
 WP option update woocommerce_tax_display_shop 'incl'
@@ -263,37 +266,75 @@ WP option update woocommerce_checkout_company_field 'optional'
 WP option update woocommerce_checkout_address_2_field 'optional'
 WP option update woocommerce_checkout_phone_field 'optional'
 
+echo "▸ Install & activate WooCommerce PayPal Payments..."
+WP plugin install woocommerce-paypal-payments --activate || true
+
 WP_EVAL <<PHP
 \$target_mode = '$REVOLUT_MODE';
 
-// Enable primary online gateways without erasing existing titles/keys
+// 1. Enable Revolut Card & Revolut Pay, turn OFF promotional/affiliate banners for speed
 foreach ( array( 'woocommerce_revolut_cc_settings', 'woocommerce_revolut_pay_settings' ) as \$opt ) {
 	\$cfg = get_option( \$opt, array() );
 	if ( ! is_array( \$cfg ) ) {
 		\$cfg = array();
 	}
-	\$cfg['enabled'] = 'yes';
+	\$cfg['enabled']          = 'yes';
+	\$cfg['reward_banner']    = 'no';
+	\$cfg['benefits_banner']  = 'no';
+	\$cfg['cashback_label']   = 'no';
 	update_option( \$opt, \$cfg );
 }
 
-// Preserve existing Revolut API credentials; only switch mode if explicitly requested
+// Preserve existing Revolut API credentials; turn OFF affiliate/promotional banners
 \$rev = get_option( 'woocommerce_revolut_settings', array() );
 if ( ! is_array( \$rev ) ) {
 	\$rev = array();
 }
-\$rev['enabled'] = 'yes';
+\$rev['enabled']            = 'yes';
+\$rev['reward_banner']      = 'no';
+\$rev['benefits_banner']    = 'no';
+\$rev['cashback_label']     = 'no';
+\$rev['promotional_banner'] = 'no';
 if ( in_array( \$target_mode, array( 'sandbox', 'live' ), true ) ) {
 	\$rev['mode'] = \$target_mode;
 }
 update_option( 'woocommerce_revolut_settings', \$rev );
 
-// Keep unused gateways OFF
+// 2. Configure Apple Pay / Google Pay (Payment Request)
+\$pr_cfg = get_option( 'woocommerce_revolut_payment_request_settings', array() );
+if ( ! is_array( \$pr_cfg ) ) {
+	\$pr_cfg = array();
+}
+\$pr_cfg['enabled']     = 'yes';
+\$pr_cfg['title']       = 'Apple Pay / Google Pay';
+\$pr_cfg['description'] = 'Sicher und schnell bezahlen mit Apple Pay oder Google Pay.';
+update_option( 'woocommerce_revolut_payment_request_settings', \$pr_cfg );
+
+// 3. Configure Pay by Bank with correct description
+\$pbb_cfg = get_option( 'woocommerce_revolut_pay_by_bank_settings', array() );
+if ( ! is_array( \$pbb_cfg ) ) {
+	\$pbb_cfg = array();
+}
+\$pbb_cfg['title']       = 'Pay by Bank';
+\$pbb_cfg['description'] = 'Direkt und sicher per Online-Banking über dein Bankkonto bezahlen.';
+\$pbb_cfg['enabled']     = 'no';
+update_option( 'woocommerce_revolut_pay_by_bank_settings', \$pbb_cfg );
+
+// 4. Configure PayPal Payments (incl. Pay Later)
+\$pp_cfg = get_option( 'woocommerce_ppcp-gateway_settings', array() );
+if ( ! is_array( \$pp_cfg ) ) {
+	\$pp_cfg = array();
+}
+\$pp_cfg['enabled']     = 'yes';
+\$pp_cfg['title']       = 'PayPal';
+\$pp_cfg['description'] = 'Sicher und bequem bezahlen mit PayPal (inkl. Später Bezahlen).';
+update_option( 'woocommerce_ppcp-gateway_settings', \$pp_cfg );
+
+// 5. Keep legacy offline gateways OFF
 foreach ( array(
 	'woocommerce_bacs_settings',
 	'woocommerce_cheque_settings',
 	'woocommerce_cod_settings',
-	'woocommerce_revolut_pay_by_bank_settings',
-	'woocommerce_revolut_payment_request_settings',
 ) as \$off_opt ) {
 	\$cfg = get_option( \$off_opt, array() );
 	if ( is_array( \$cfg ) || false !== get_option( \$off_opt, false ) ) {
@@ -304,6 +345,10 @@ foreach ( array(
 		update_option( \$off_opt, \$cfg );
 	}
 }
+
+// 6. Ensure products are not marked as Virtual so shipping is always calculated
+global \$wpdb;
+\$wpdb->query( "UPDATE {\$wpdb->postmeta} SET meta_value = 'no' WHERE meta_key = '_virtual' AND meta_value = 'yes'" );
 PHP
 
 echo "==> 4/6 Orders & Emails (sender shop@rasakopi.coffee, notifications ON)..."

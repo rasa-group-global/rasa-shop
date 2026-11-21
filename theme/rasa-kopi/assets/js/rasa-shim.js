@@ -152,6 +152,13 @@
 			});
 		}
 
+		function decodeHtmlEntities(s) {
+			if (!s || typeof s !== 'string' || s.indexOf('&') === -1) return s || '';
+			var txt = document.createElement('textarea');
+			txt.innerHTML = s;
+			return txt.value;
+		}
+
 		var emptyText = drawer.getAttribute('data-empty') || 'Dein Warenkorb ist leer.';
 		var loadingText = drawer.getAttribute('data-loading') || 'Warenkorb wird geladen…';
 		var cachedCart = null;
@@ -179,7 +186,7 @@
 		}
 
 		function formatEurShort(num) {
-			return '€' + Number(num || 0).toFixed(2).replace('.', ',');
+			return Number(num || 0).toFixed(2).replace('.', ',') + ' €';
 		}
 
 		function updateFreeShipping(boxTextEl, boxBarEl, holderEl, subtotalNum) {
@@ -403,7 +410,7 @@
 						openDrawer();
 					} else {
 						var msg = (res && res.data && res.data.message) ? res.data.message : 'Produkt konnte nicht in den Warenkorb gelegt werden.';
-						if (errBox) { errBox.textContent = msg; errBox.hidden = false; }
+						if (errBox) { errBox.textContent = decodeHtmlEntities(msg); errBox.hidden = false; }
 					}
 				})
 				.catch(function () {
@@ -488,5 +495,48 @@
 		document.addEventListener('DOMContentLoaded', initMobileMenuFix);
 	} else {
 		initMobileMenuFix();
+	}
+
+	// Checkout declined payment error clarity & unfreeze button guard
+	function initCheckoutDeclineGuard() {
+		if (!document.body.classList.contains('woocommerce-checkout')) return;
+
+		var declineMsgDe = 'Zahlung abgelehnt. Bitte versuche es mit einer anderen Karte.';
+		var declineMsgEn = 'Payment declined, please try another card.';
+		var isDe = !document.documentElement.lang || document.documentElement.lang.toLowerCase().indexOf('de') === 0;
+		var preferredMsg = isDe ? declineMsgDe : declineMsgEn;
+
+		function checkErrors() {
+			var banners = document.querySelectorAll('.wc-block-components-notice-banner.is-error, .woocommerce-error li, .woocommerce-NoticeGroup-checkout .woocommerce-error');
+			banners.forEach(function (el) {
+				var txt = (el.textContent || '').trim();
+				if (/unable to process payment|something went wrong|abgelehnt|declined|failed|abgebrochen/i.test(txt)) {
+					if (!el.dataset.rasaReplaced) {
+						el.dataset.rasaReplaced = '1';
+						el.textContent = preferredMsg;
+					}
+				}
+			});
+
+			// If error is visible, make sure checkout button is not left spinning indefinitely
+			if (banners.length > 0) {
+				var btn = document.querySelector('.wc-block-components-checkout-place-order-button, button#place_order');
+				if (btn && btn.classList.contains('is-loading')) {
+					btn.classList.remove('is-loading');
+					btn.disabled = false;
+				}
+			}
+		}
+
+		var observer = new MutationObserver(function () {
+			checkErrors();
+		});
+		observer.observe(document.body, { childList: true, subtree: true });
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initCheckoutDeclineGuard);
+	} else {
+		initCheckoutDeclineGuard();
 	}
 })();

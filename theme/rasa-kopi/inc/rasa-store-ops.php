@@ -350,6 +350,17 @@ add_filter( 'woocommerce_package_rates', function ( $rates, $package ) {
 		}
 	}
 
+	// Enforce free shipping threshold: orders under 59 € MUST pay standard flat rate (4.90 €)
+	$cart_subtotal = ( function_exists( 'WC' ) && WC()->cart ) ? (float) WC()->cart->get_displayed_subtotal() : 0.0;
+	if ( $cart_subtotal > 0 && $cart_subtotal < 59.0 ) {
+		foreach ( $rates as $rate_id => $rate ) {
+			if ( $rate instanceof WC_Shipping_Rate && 'free_shipping' === $rate->get_method_id() ) {
+				unset( $rates[ $rate_id ] );
+			}
+		}
+		$has_free_shipping = false;
+	}
+
 	if ( $has_free_shipping ) {
 		foreach ( $rates as $rate_id => $rate ) {
 			if ( $rate instanceof WC_Shipping_Rate && 'flat_rate' === $rate->get_method_id() ) {
@@ -360,6 +371,27 @@ add_filter( 'woocommerce_package_rates', function ( $rates, $package ) {
 
 	return $rates;
 }, 20, 2 );
+
+// Guarantee store base country & customer default stay as Germany (DE)
+add_action( 'init', function () {
+	if ( 'DE' !== get_option( 'woocommerce_default_country' ) ) {
+		update_option( 'woocommerce_default_country', 'DE' );
+	}
+	if ( 'base' !== get_option( 'woocommerce_default_customer_address' ) ) {
+		update_option( 'woocommerce_default_customer_address', 'base' );
+	}
+	if ( 'no' !== get_option( 'woocommerce_shipping_cost_requires_address' ) ) {
+		update_option( 'woocommerce_shipping_cost_requires_address', 'no' );
+	}
+}, 5 );
+
+// Transform vague gateway errors on checkout into clear customer feedback
+add_filter( 'woocommerce_add_error', function ( $error ) {
+	if ( is_string( $error ) && preg_match( '/unable to process payment|something went wrong|abgelehnt|declined|failed/i', $error ) ) {
+		return rasa_tr( 'Zahlung abgelehnt. Bitte versuche es mit einer anderen Karte.', 'Payment declined, please try another card.' );
+	}
+	return $error;
+} );
 
 /* ------------------------------------------------------------------ *
  * 3. Germanized: Invoice OFF + Unit Price & Delivery Time Helpers

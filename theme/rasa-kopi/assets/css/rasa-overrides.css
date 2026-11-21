@@ -1282,3 +1282,29 @@ body.admin-bar .rasa-cart-drawer {
 					gap: 0.8rem 1.2rem !important;
 				}
 			}
+
+			/* ===== Prevent blue box flickering & style notices cleanly on Checkout page ===== */
+			.woocommerce-checkout .woocommerce-info,
+			.woocommerce-checkout .wc-block-components-notice-banner.is-info {
+				border-color: rgba(18, 18, 18, 0.18) !important;
+				border-top-color: rgba(18, 18, 18, 0.18) !important;
+				background-color: #fafafa !important;
+				color: #121212 !important;
+			}
+
+			.woocommerce-checkout .woocommerce-info:empty,
+			.woocommerce-checkout .woocommerce-notices-wrapper:empty,
+			.woocommerce-checkout .wc-block-components-notice-banner:empty {
+				display: none !important;
+			}
+
+			.skip-to-content-link:not(:focus-visible) {
+				position: absolute !important;
+				overflow: hidden !important;
+				clip: rect(0 0 0 0) !important;
+				height: 1px !important;
+				width: 1px !important;
+				margin: -1px !important;
+				padding: 0 !important;
+				border: 0 !important;
+			}

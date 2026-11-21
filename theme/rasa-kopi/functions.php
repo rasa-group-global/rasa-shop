@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('RASA_VERSION', '1.0.20');
+define('RASA_VERSION', '1.0.22');
 define('RASA_DIR', get_template_directory());
 define('RASA_URI', get_template_directory_uri());
 
@@ -376,7 +376,7 @@ function rasa_ensure_wc_cart()
 
 function rasa_format_eur($amount, $with_suffix = false)
 {
-	$formatted = '€' . number_format((float) $amount, 2, ',', '.');
+	$formatted = number_format((float) $amount, 2, ',', '.') . ' €';
 	return $with_suffix ? ($formatted . ' EUR') : $formatted;
 }
 
@@ -385,7 +385,7 @@ function rasa_cart_payload()
 	if (!rasa_ensure_wc_cart()) {
 		return array(
 			'count' => 0,
-			'subtotal' => '€0,00 EUR',
+			'subtotal' => '0,00 € EUR',
 			'subtotal_num' => 0.0,
 			'cartUrl' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
 			'checkoutUrl' => function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : home_url('/checkout/'),
@@ -483,7 +483,14 @@ function rasa_ajax_add_to_cart()
 	if (!$added) {
 		$errors = wc_get_notices('error');
 		wc_clear_notices();
-		$msg = !empty($errors[0]['notice']) ? wp_strip_all_tags($errors[0]['notice']) : rasa_tr('Produkt konnte nicht in den Warenkorb gelegt werden.', 'Could not add product to cart.');
+		$raw_notice = !empty($errors[0]['notice']) ? $errors[0]['notice'] : '';
+		if (!empty($raw_notice)) {
+			// Strip wc-forward action links (e.g. "View cart") if embedded in notice markup
+			$raw_notice = preg_replace('/<a\b[^>]*\bclass="[^"]*wc-forward[^"]*"[^>]*>.*?<\/a>/is', '', $raw_notice);
+			$msg = trim(html_entity_decode(wp_strip_all_tags($raw_notice), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+		} else {
+			$msg = rasa_tr('Produkt konnte nicht in den Warenkorb gelegt werden.', 'Could not add product to cart.');
+		}
 		while (ob_get_level() > 0) {
 			ob_end_clean();
 		}

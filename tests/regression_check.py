@@ -13,6 +13,8 @@ Covers:
    `.utility-bar { height: auto !important }` guard against `base.css:height:100%` 100vh collapse).
 7. Store settings baseline (`setup/settings.sh`, `docs/settings.md`, `rasa-store-ops.php`,
    `first-run.sh`, `.env.example`), LF enforcement on `.sh`, and secret-hygiene scanning.
+8. Notice HTML entity decoding & tag leak guard in AJAX cart error responses (`functions.php`)
+   and frontend PDP error presentation (`rasa-shim.js`).
 """
 
 import os
@@ -421,6 +423,46 @@ def main() -> None:
         'woocommerce_add_to_cart_redirect must return false on wc-ajax/ajax requests'
     )
     print('AJAX add-to-cart 302-redirect & WC_Form_Handler collision guard: OK')
+
+    print('\n=== 8. NOTICE HTML ENTITY & TAG LEAK GUARD ===')
+    assert re.search(r'html_entity_decode\s*\(\s*wp_strip_all_tags\s*\(', func_src), (
+        'functions.php rasa_ajax_add_to_cart must decode HTML entities from stripped notices to prevent &quot;/&amp; leaks'
+    )
+    assert 'decodeHtmlEntities' in shim_src and 'errBox.textContent = decodeHtmlEntities(msg)' in shim_src, (
+        'rasa-shim.js must decode HTML entities before assigning to errBox.textContent'
+    )
+    import html
+    test_notice = 'You cannot add &quot;Rasa Essential Tee - s&quot; to the cart because the product is out of stock.'
+    decoded = html.unescape(test_notice)
+    assert '&quot;' not in decoded and '"Rasa Essential Tee - s"' in decoded, 'Entity decoding logic failed'
+    print('Notice HTML entity and tag stripping guards: OK')
+
+    print('\n=== 9. PAYMENT ICONS, CURRENCY POSTFIX, REVOLUT BANNERS & SHIPPING SAFEGUARDS ===')
+    icons_src = open(os.path.join(ROOT, 'theme/rasa-kopi/inc/payment-icons.php'), 'r', encoding='utf-8').read()
+    for approved in ('pi-visa', 'pi-master', 'pi-maestro', 'pi-revolut_pay', 'pi-apple_pay', 'pi-google_pay', 'pi-paypal'):
+        assert approved in icons_src, f'Missing approved payment icon {approved} in payment-icons.php'
+    for disallowed in ('shopify_pay', 'pi-american_express', 'pi-unionpay', 'pi-klarna'):
+        assert disallowed not in icons_src, f'Disallowed payment icon {disallowed} still present in payment-icons.php'
+
+    # Currency formatting: € sign after numbers
+    assert "number_format((float) $amount, 2, ',', '.') . ' €'" in func_src, 'functions.php rasa_format_eur must place € after numbers'
+    tags_src = open(os.path.join(ROOT, 'theme/rasa-kopi/inc/template-tags.php'), 'r', encoding='utf-8').read()
+    assert 'number_format' in tags_src and '&nbsp;&euro;</bdi>' in tags_src, 'template-tags.php price html must place € after numbers'
+    assert "toFixed(2).replace('.', ',') + ' €'" in shim_src, 'rasa-shim.js formatEurShort must place € after numbers'
+
+    # Revolut banners OFF in setup/settings.sh
+    assert re.search(r"['\"]reward_banner['\"]\]\s*=\s*['\"]no['\"]", sh_src), 'Missing reward_banner = no in settings.sh'
+    assert re.search(r"['\"]cashback_label['\"]\]\s*=\s*['\"]no['\"]", sh_src), 'Missing cashback_label = no in settings.sh'
+
+    # Shipping & Base Germany guard in rasa-store-ops.php
+    ops_src = open(os.path.join(ROOT, 'theme/rasa-kopi/inc/rasa-store-ops.php'), 'r', encoding='utf-8').read()
+    assert 'cart_subtotal < 59.0' in ops_src and "unset( $rates[ $rate_id ] )" in ops_src, (
+        'rasa-store-ops.php must enforce 4.90 flat rate and unset free shipping for carts under 59 €'
+    )
+    assert "update_option( 'woocommerce_default_country', 'DE' )" in ops_src, (
+        'rasa-store-ops.php must enforce DE base country on init'
+    )
+    print('Payment icons, currency postfix, Revolut banner & shipping safeguards: OK')
 
 
 if __name__ == '__main__':

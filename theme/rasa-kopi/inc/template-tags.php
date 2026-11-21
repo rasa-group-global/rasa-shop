@@ -35,7 +35,7 @@ function rasa_announcements() {
 	$items = array(
 		array( 'text' => rasa_tr( 'Kostenloser Versand ab 59 € in Deutschland', 'Free shipping over €59 in Germany' ), 'link' => home_url( '/versand-zahlung/' ) ),
 		array( 'text' => rasa_tr( 'Lieferung in 3–7 Werktagen', 'Delivery in 3–7 business days' ), 'link' => home_url( '/versand-zahlung/' ) ),
-		array( 'text' => rasa_tr( 'Sicher bezahlen mit PayPal, Klarna, Apple Pay & Google Pay', 'Secure payment with PayPal, Klarna, Apple Pay & Google Pay' ), 'link' => '' ),
+		array( 'text' => rasa_tr( 'Sicher bezahlen mit Visa, Mastercard, PayPal, Apple Pay & Google Pay', 'Secure payment with Visa, Mastercard, PayPal, Apple Pay & Google Pay' ), 'link' => '' ),
 	);
 	// override dari customizer
 	$custom = get_theme_mod( 'rasa_announcements', array() );
@@ -51,9 +51,9 @@ function rasa_price_html( $product, $args = array() ) {
 	$show_compare  = ! empty( $args['show_compare_at_price'] );
 	$on_sale       = $product->is_on_sale();
 
-	// Format harga persis Shopify live: "€79,00 EUR"
+	// Format harga German: "79,00 €"
 	$fmt = function ( $v ) {
-		return '<span class="woocommerce-Price-amount amount"><bdi>&euro;' . number_format( (float) $v, 2, ',', '.' ) . ' EUR</bdi></span>';
+		return '<span class="woocommerce-Price-amount amount"><bdi>' . number_format( (float) $v, 2, ',', '.' ) . '&nbsp;&euro;</bdi></span>';
 	};
 
 	// Variable product: parent price kosong — pakai "Von" (min variation price), persis Dawn

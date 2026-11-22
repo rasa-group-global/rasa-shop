@@ -336,10 +336,13 @@ function rasa_sso_resolve_or_create_wp_user( $email, $name, $kc_sub, array $role
 		update_user_meta( $wp_user->ID, RASA_META_VAT_ID, rasa_sanitize_vat_id( $vat_id ) );
 	}
 
-	// Sync RasaApi UUID, Wallet & Loyalty Points
+	// Sync RasaApi UUID, Phone, Wallet & Loyalty Points
 	if ( is_array( $rasa_user ) ) {
 		if ( ! empty( $rasa_user['uuid'] ) ) {
 			update_user_meta( $wp_user->ID, RASA_META_USER_UUID, sanitize_text_field( (string) $rasa_user['uuid'] ) );
+		}
+		if ( ! empty( $rasa_user['phone'] ) ) {
+			rasa_sso_save_user_phone( $wp_user->ID, $rasa_user['phone'], $rasa_user['country_code'] ?? '' );
 		}
 		if ( isset( $rasa_user['saldo_wallet'] ) ) {
 			update_user_meta( $wp_user->ID, RASA_META_WALLET_BALANCE, (float) $rasa_user['saldo_wallet'] );
@@ -352,15 +355,106 @@ function rasa_sso_resolve_or_create_wp_user( $email, $name, $kc_sub, array $role
 }
 
 /**
+ * Normalize phone number into E.164 international format (+49... / +62...) to match Rasa Apps & Keycloak.
+ */
+function rasa_sso_normalize_phone( $phone, $country_code = '+49' ) {
+	$digits = preg_replace( '/[^\d+]/', '', trim( (string) $phone ) );
+	if ( '' === $digits ) {
+		return '';
+	}
+	if ( 0 === strpos( $digits, '+' ) ) {
+		return $digits;
+	}
+	$prefix = ! empty( $country_code ) ? '+' . ltrim( preg_replace( '/\D/', '', (string) $country_code ), '+' ) : '+49';
+	if ( 0 === strpos( $digits, '0' ) ) {
+		return $prefix . ltrim( $digits, '0' );
+	}
+	if ( preg_match( '/^(62|49|43|41|31)\d{6,}$/', $digits ) ) {
+		return '+' . $digits;
+	}
+	return $prefix . $digits;
+}
+
+/**
+ * Save normalized phone number to WooCommerce billing_phone & _rasa_phone user meta.
+ */
+function rasa_sso_save_user_phone( $user_id, $phone, $country_code = '+49' ) {
+	if ( ! $user_id || empty( $phone ) ) {
+		return;
+	}
+	$normalized = rasa_sso_normalize_phone( $phone, $country_code );
+	if ( '' !== $normalized ) {
+		update_user_meta( $user_id, 'billing_phone', $normalized );
+		update_user_meta( $user_id, '_rasa_phone', $normalized );
+		if ( ! empty( $country_code ) ) {
+			update_user_meta( $user_id, '_rasa_country_code', sanitize_text_field( (string) $country_code ) );
+		}
+	}
+}
+
+/**
+ * Lookup a WordPress user by phone number across billing_phone and _rasa_phone (matches E.164 & local 08... variants).
+ */
+function rasa_sso_find_wp_user_by_phone( $phone ) {
+	$clean = preg_replace( '/[^\d+]/', '', trim( (string) $phone ) );
+	if ( strlen( $clean ) < 7 ) {
+		return null;
+	}
+	$digits_only = ltrim( $clean, '+' );
+	$local_zero  = '0' . preg_replace( '/^(62|49|43|41|31)/', '', $digits_only );
+	$variants    = array_values(
+		array_unique(
+			array_filter(
+				array(
+					$clean,
+					'+' . $digits_only,
+					$digits_only,
+					$local_zero,
+				)
+			)
+		)
+	);
+
+	foreach ( array( 'billing_phone', '_rasa_phone' ) as $meta_key ) {
+		$found = get_users(
+			array(
+				'meta_query' => array(
+					array(
+						'key'     => $meta_key,
+						'value'   => $variants,
+						'compare' => 'IN',
+					),
+				),
+				'number'     => 1,
+			)
+		);
+		if ( ! empty( $found[0] ) && ( $found[0] instanceof WP_User ) ) {
+			return $found[0];
+		}
+	}
+
+	return null;
+}
+
+/**
  * ============================================================================
  * SINGLE SOURCE OF TRUTH: Sync Native WooCommerce Registration & Login -> RasaApi & Keycloak
  * ============================================================================
  */
-function rasa_sso_sync_credentials_to_central_api( $email, $password, $name = '', $wp_user_id = 0 ) {
+function rasa_sso_sync_credentials_to_central_api( $email, $password, $name = '', $wp_user_id = 0, $phone = '', $country_code = '+49' ) {
 	$cfg = rasa_sso_config();
-	if ( ! $cfg['enabled'] || empty( $email ) || empty( $password ) ) {
+	if ( ! $cfg['enabled'] || ( empty( $email ) && empty( $phone ) ) || empty( $password ) ) {
 		return;
 	}
+
+	$normalized_phone = ! empty( $phone ) ? rasa_sso_normalize_phone( $phone, $country_code ) : '';
+	if ( $wp_user_id && ! empty( $normalized_phone ) ) {
+		rasa_sso_save_user_phone( $wp_user_id, $normalized_phone, $country_code );
+	}
+
+	$login_payload = ! empty( $email )
+		? array( 'email' => $email, 'password' => $password )
+		: array( 'phone' => $normalized_phone, 'password' => $password );
 
 	// 1. Try logging in against RasaApi (which automatically syncs with Keycloak)
 	$login_res = wp_remote_post(
@@ -371,12 +465,7 @@ function rasa_sso_sync_credentials_to_central_api( $email, $password, $name = ''
 				'Accept'       => 'application/json',
 				'Content-Type' => 'application/json',
 			),
-			'body'    => wp_json_encode(
-				array(
-					'email'    => $email,
-					'password' => $password,
-				)
-			),
+			'body'    => wp_json_encode( $login_payload ),
 		)
 	);
 
@@ -404,14 +493,32 @@ function rasa_sso_sync_credentials_to_central_api( $email, $password, $name = ''
 					if ( ! empty( $r_user['uuid'] ) ) {
 						update_user_meta( $wp_user_id, RASA_META_USER_UUID, sanitize_text_field( (string) $r_user['uuid'] ) );
 					}
+					if ( ! empty( $r_user['phone'] ) && empty( $normalized_phone ) ) {
+						rasa_sso_save_user_phone( $wp_user_id, $r_user['phone'], $r_user['country_code'] ?? '+49' );
+					}
 				}
 			}
 		}
 		return;
 	}
 
-	// 2. If user does not exist yet in RasaApi, register them in RasaApi (which auto-syncs to Keycloak)
+	// 2. If user does not exist yet in RasaApi, register them in RasaApi (which auto-syncs to Keycloak with phone as username)
+	if ( empty( $email ) ) {
+		return;
+	}
 	$display_name = $name ?: current( explode( '@', $email ) );
+	$reg_payload  = array(
+		'name'                  => $display_name,
+		'email'                 => $email,
+		'password'              => $password,
+		'password_confirmation' => $password,
+		'is_guest'              => 1,
+	);
+	if ( ! empty( $normalized_phone ) ) {
+		$reg_payload['phone']        = $normalized_phone;
+		$reg_payload['country_code'] = $country_code;
+	}
+
 	$reg_res = wp_remote_post(
 		$cfg['api_url'] . '/auth/register',
 		array(
@@ -420,15 +527,7 @@ function rasa_sso_sync_credentials_to_central_api( $email, $password, $name = ''
 				'Accept'       => 'application/json',
 				'Content-Type' => 'application/json',
 			),
-			'body'    => wp_json_encode(
-				array(
-					'name'                  => $display_name,
-					'email'                 => $email,
-					'password'              => $password,
-					'password_confirmation' => $password,
-					'is_guest'              => 1,
-				)
-			),
+			'body'    => wp_json_encode( $reg_payload ),
 		)
 	);
 
@@ -447,39 +546,107 @@ function rasa_sso_sync_credentials_to_central_api( $email, $password, $name = ''
 }
 
 /**
- * Hook into WooCommerce Customer Registration to push new account to RasaApi & Keycloak.
+ * Render Country Code + Phone Number field on WooCommerce Registration Form (/my-account/)
+ * so customers registering on WooCommerce also have a phone number synced with Rasa Apps.
+ */
+add_action( 'woocommerce_register_form_start', function () {
+	$phone_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Telefonnummer (fÃ¼r Rasa Account)', 'Phone number (for Rasa Account)' )
+		: 'Phone number (for Rasa Account)';
+	$posted_code  = isset( $_POST['rasa_country_code'] ) ? sanitize_text_field( wp_unslash( $_POST['rasa_country_code'] ) ) : '+49';
+	$posted_phone = isset( $_POST['billing_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['billing_phone'] ) ) : '';
+	?>
+	<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
+		<label for="reg_billing_phone"><?php echo esc_html( $phone_label ); ?>&nbsp;<span class="required">*</span></label>
+		<span style="display:flex;gap:0.8rem;align-items:center;">
+			<select name="rasa_country_code" id="reg_rasa_country_code" style="width:120px;flex-shrink:0;height:4.5rem;padding:0 0.8rem;border:1px solid rgba(18,18,18,0.25);">
+				<option value="+49" <?php selected( $posted_code, '+49' ); ?>>+49 (DE)</option>
+				<option value="+62" <?php selected( $posted_code, '+62' ); ?>>+62 (ID)</option>
+				<option value="+43" <?php selected( $posted_code, '+43' ); ?>>+43 (AT)</option>
+				<option value="+41" <?php selected( $posted_code, '+41' ); ?>>+41 (CH)</option>
+				<option value="+31" <?php selected( $posted_code, '+31' ); ?>>+31 (NL)</option>
+			</select>
+			<input type="tel" class="woocommerce-Input woocommerce-Input--text input-text" name="billing_phone" id="reg_billing_phone" autocomplete="tel" placeholder="81XXXXXXX" value="<?php echo esc_attr( $posted_phone ); ?>" required style="flex:1;" />
+		</span>
+	</p>
+	<?php
+} );
+
+/**
+ * Validate Phone Number on WooCommerce Registration.
+ */
+add_filter( 'woocommerce_registration_errors', function ( $errors, $username, $email ) {
+	if ( isset( $_POST['billing_phone'] ) ) {
+		$raw_phone = trim( sanitize_text_field( wp_unslash( $_POST['billing_phone'] ) ) );
+		$digits    = preg_replace( '/\D/', '', $raw_phone );
+		if ( strlen( $digits ) < 7 ) {
+			$msg = function_exists( 'rasa_tr' )
+				? rasa_tr( 'Bitte gib eine gÃ¼ltige Telefonnummer ein.', 'Please enter a valid phone number.' )
+				: 'Please enter a valid phone number.';
+			$errors->add( 'billing_phone_error', $msg );
+		}
+	}
+	return $errors;
+}, 10, 3 );
+
+/**
+ * Hook into WooCommerce Customer Registration to save phone number & push new account to RasaApi & Keycloak.
  */
 add_action( 'woocommerce_created_customer', function ( $customer_id, $new_customer_data, $password_generated ) {
-	$email = $new_customer_data['user_email'] ?? '';
-	$pass  = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : ( $new_customer_data['user_pass'] ?? '' );
-	$name  = isset( $_POST['billing_first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['billing_first_name'] ) ) : ( $new_customer_data['user_login'] ?? '' );
+	$email        = $new_customer_data['user_email'] ?? '';
+	$pass         = isset( $_POST['password'] ) ? (string) wp_unslash( $_POST['password'] ) : ( $new_customer_data['user_pass'] ?? '' );
+	$name         = isset( $_POST['billing_first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['billing_first_name'] ) ) : ( $new_customer_data['user_login'] ?? '' );
+	$country_code = isset( $_POST['rasa_country_code'] ) ? sanitize_text_field( wp_unslash( $_POST['rasa_country_code'] ) ) : '+49';
+	$raw_phone    = isset( $_POST['billing_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['billing_phone'] ) ) : '';
+
+	if ( ! empty( $raw_phone ) ) {
+		rasa_sso_save_user_phone( $customer_id, $raw_phone, $country_code );
+	}
+
 	if ( ! empty( $email ) && ! empty( $pass ) ) {
-		rasa_sso_sync_credentials_to_central_api( $email, $pass, $name, $customer_id );
+		rasa_sso_sync_credentials_to_central_api( $email, $pass, $name, $customer_id, $raw_phone, $country_code );
 	}
 }, 10, 3 );
 
 /**
- * Hook into WordPress native authentication so users in Keycloak/RasaApi can also log in via the native WooCommerce form,
- * and existing WooCommerce users are synced to RasaApi/Keycloak on login.
+ * Hook into WordPress native authentication so users can log in with Email, Username, OR Phone Number (+49... / +62... / 08...),
+ * and synchronize credentials with RasaApi & Keycloak.
  */
 add_filter( 'authenticate', function ( $user, $username, $password ) {
 	if ( empty( $username ) || empty( $password ) ) {
 		return $user;
 	}
 
-	$cfg = rasa_sso_config();
+	$cfg        = rasa_sso_config();
+	$input_trim = trim( (string) $username );
+	$is_phone   = ( ! is_email( $input_trim ) && 1 === preg_match( '/^[\d+\-\s()]{7,20}$/', $input_trim ) );
+
+	// Step 0: If user typed a phone number on WooCommerce login form and WP hasn't resolved them yet, resolve local WP user by phone meta!
+	if ( ! ( $user instanceof WP_User ) && $is_phone ) {
+		$phone_user = rasa_sso_find_wp_user_by_phone( $input_trim );
+		if ( $phone_user instanceof WP_User && wp_check_password( $password, $phone_user->user_pass, $phone_user->ID ) ) {
+			$user = $phone_user;
+		}
+	}
+
 	if ( ! $cfg['enabled'] ) {
 		return $user;
 	}
 
-	// Case A: Native WP login succeeded -> ensure user is synced to RasaApi & Keycloak
+	// Case A: Native WP login succeeded (by email, username, or local phone) -> ensure user is synced to RasaApi & Keycloak
 	if ( $user instanceof WP_User ) {
-		rasa_sso_sync_credentials_to_central_api( $user->user_email, $password, $user->display_name, $user->ID );
+		$user_phone = get_user_meta( $user->ID, 'billing_phone', true ) ?: ( $is_phone ? $input_trim : '' );
+		$user_cc    = get_user_meta( $user->ID, '_rasa_country_code', true ) ?: '+49';
+		rasa_sso_sync_credentials_to_central_api( $user->user_email, $password, $user->display_name, $user->ID, $user_phone, $user_cc );
 		return $user;
 	}
 
-	// Case B: Native WP login failed or user doesn't exist locally in WP -> check RasaApi / Keycloak SSO
-	if ( is_email( $username ) ) {
+	// Case B: Native WP login failed or user only exists in RasaApi / Keycloak -> authenticate via RasaApi by Email OR Phone Number!
+	if ( is_email( $input_trim ) || $is_phone ) {
+		$api_payload = is_email( $input_trim )
+			? array( 'email' => $input_trim, 'password' => $password )
+			: array( 'phone' => preg_replace( '/[^\d+]/', '', $input_trim ), 'password' => $password );
+
 		$login_res = wp_remote_post(
 			$cfg['api_url'] . '/auth/login',
 			array(
@@ -488,14 +655,35 @@ add_filter( 'authenticate', function ( $user, $username, $password ) {
 					'Accept'       => 'application/json',
 					'Content-Type' => 'application/json',
 				),
-				'body'    => wp_json_encode(
-					array(
-						'email'    => $username,
-						'password' => $password,
-					)
-				),
+				'body'    => wp_json_encode( $api_payload ),
 			)
 		);
+
+		// If phone login without country prefix failed, retry with normalized +62 and +49 prefixes
+		if ( $is_phone && ( is_wp_error( $login_res ) || 200 !== (int) wp_remote_retrieve_response_code( $login_res ) ) ) {
+			foreach ( array( '+49', '+62' ) as $try_cc ) {
+				$alt_phone = rasa_sso_normalize_phone( $input_trim, $try_cc );
+				$login_res = wp_remote_post(
+					$cfg['api_url'] . '/auth/login',
+					array(
+						'timeout' => 6,
+						'headers' => array(
+							'Accept'       => 'application/json',
+							'Content-Type' => 'application/json',
+						),
+						'body'    => wp_json_encode(
+							array(
+								'phone'    => $alt_phone,
+								'password' => $password,
+							)
+						),
+					)
+				);
+				if ( ! is_wp_error( $login_res ) && 200 === (int) wp_remote_retrieve_response_code( $login_res ) ) {
+					break;
+				}
+			}
+		}
 
 		if ( ! is_wp_error( $login_res ) && 200 === (int) wp_remote_retrieve_response_code( $login_res ) ) {
 			$body  = json_decode( wp_remote_retrieve_body( $login_res ), true );
@@ -540,6 +728,18 @@ add_filter( 'authenticate', function ( $user, $username, $password ) {
 
 	return $user;
 }, 35, 3 );
+
+/**
+ * Update WooCommerce Login Username label to inform users they can sign in with Phone Number, Username, or Email.
+ */
+add_filter( 'gettext', function ( $translated, $text, $domain ) {
+	if ( 'woocommerce' === $domain && ( 'Username or email address' === $text || 'Username or email' === $text ) ) {
+		return function_exists( 'rasa_tr' )
+			? rasa_tr( 'Telefonnummer, Benutzername oder E-Mail-Adresse', 'Phone number, username or email address' )
+			: 'Phone number, username or email address';
+	}
+	return $translated;
+}, 20, 3 );
 
 /**
  * ============================================================================

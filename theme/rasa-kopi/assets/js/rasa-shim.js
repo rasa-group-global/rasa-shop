@@ -543,12 +543,14 @@
 
 		function openPopover() {
 			popover.hidden = false;
+			popover.style.display = 'block';
 			popover.classList.add('is-open');
 			trigger.setAttribute('aria-expanded', 'true');
 		}
 
 		function closePopover() {
 			popover.hidden = true;
+			popover.style.display = 'none';
 			popover.classList.remove('is-open');
 			trigger.setAttribute('aria-expanded', 'false');
 		}

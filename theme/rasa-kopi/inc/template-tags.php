@@ -499,10 +499,10 @@ function rasa_render_header_account_popover() {
 			? rasa_tr( 'Abmelden', 'Sign out' )
 			: 'Sign out';
 		?>
-		<div id="HeaderAccountPopover" class="rasa-account-popover rasa-account-popover--logged-in" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( $account_title ); ?>" hidden>
-			<div class="rasa-account-popover__header">
-				<h3 class="rasa-account-popover__title"><?php echo esc_html( $account_title ); ?></h3>
-				<button type="button" class="rasa-account-popover__close" aria-label="<?php echo esc_attr( $close_label ); ?>" id="HeaderAccountClose">
+		<div id="HeaderAccountPopover" class="rasa-account-popover rasa-account-popover--logged-in" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( $account_title ); ?>" hidden style="display:none;position:absolute;top:calc(100% + 12px);right:0;width:320px;max-width:calc(100vw - 32px);background:#ffffff;border:1px solid rgba(18,18,18,0.12);border-radius:8px;box-shadow:0 16px 36px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.06);padding:22px 20px 18px;z-index:1000;box-sizing:border-box;text-align:left;color:#121212;">
+			<div class="rasa-account-popover__header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+				<h3 class="rasa-account-popover__title" style="margin:0;font-size:1.6rem;font-weight:600;color:#121212;line-height:1.3;letter-spacing:-0.01em;"><?php echo esc_html( $account_title ); ?></h3>
+				<button type="button" class="rasa-account-popover__close" aria-label="<?php echo esc_attr( $close_label ); ?>" id="HeaderAccountClose" style="background:transparent;border:none;padding:6px;margin:-6px;cursor:pointer;color:rgba(18,18,18,0.55);display:flex;align-items:center;justify-content:center;border-radius:4px;">
 					<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<line x1="1" y1="1" x2="13" y2="13"></line>
 						<line x1="13" y1="1" x2="1" y2="13"></line>
@@ -511,12 +511,12 @@ function rasa_render_header_account_popover() {
 			</div>
 
 			<div class="rasa-account-popover__body">
-				<div class="rasa-account-popover__email">
+				<div class="rasa-account-popover__email" style="font-size:1.35rem;color:rgba(18,18,18,0.65);margin:-6px 0 16px 0;word-break:break-all;">
 					<?php echo esc_html( $current_user->user_email ); ?>
 				</div>
 
-				<div class="rasa-account-popover__grid-actions">
-					<a href="<?php echo esc_url( $orders_url ); ?>" class="rasa-account-popover__action-btn">
+				<div class="rasa-account-popover__grid-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+					<a href="<?php echo esc_url( $orders_url ); ?>" class="rasa-account-popover__action-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;background:#ffffff;border:1px solid rgba(18,18,18,0.15);border-radius:6px;font-size:1.35rem;font-weight:500;color:#121212 !important;text-decoration:none !important;box-sizing:border-box;">
 						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
 							<line x1="3" y1="6" x2="21" y2="6"></line>
@@ -524,7 +524,7 @@ function rasa_render_header_account_popover() {
 						</svg>
 						<span><?php echo esc_html( $orders_label ); ?></span>
 					</a>
-					<a href="<?php echo esc_url( $profile_url ); ?>" class="rasa-account-popover__action-btn">
+					<a href="<?php echo esc_url( $profile_url ); ?>" class="rasa-account-popover__action-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;background:#ffffff;border:1px solid rgba(18,18,18,0.15);border-radius:6px;font-size:1.35rem;font-weight:500;color:#121212 !important;text-decoration:none !important;box-sizing:border-box;">
 						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
 							<circle cx="12" cy="7" r="4"></circle>
@@ -533,8 +533,8 @@ function rasa_render_header_account_popover() {
 					</a>
 				</div>
 
-				<div class="rasa-account-popover__signout-wrap">
-					<a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="rasa-account-popover__signout-link">
+				<div class="rasa-account-popover__signout-wrap" style="margin-top:14px;text-align:center;border-top:1px solid rgba(18,18,18,0.08);padding-top:12px;">
+					<a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="rasa-account-popover__signout-link" style="font-size:1.25rem;color:rgba(18,18,18,0.6);text-decoration:none !important;">
 						<?php echo esc_html( $logout_label ); ?>
 					</a>
 				</div>
@@ -572,10 +572,10 @@ function rasa_render_header_account_popover() {
 		? rasa_tr( 'Schließen', 'Close' )
 		: 'Close';
 	?>
-	<div id="HeaderAccountPopover" class="rasa-account-popover" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( $title ); ?>" hidden>
-		<div class="rasa-account-popover__header">
-			<h3 class="rasa-account-popover__title"><?php echo esc_html( $title ); ?></h3>
-			<button type="button" class="rasa-account-popover__close" aria-label="<?php echo esc_attr( $close_label ); ?>" id="HeaderAccountClose">
+	<div id="HeaderAccountPopover" class="rasa-account-popover" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( $title ); ?>" hidden style="display:none;position:absolute;top:calc(100% + 12px);right:0;width:360px;max-width:calc(100vw - 32px);background:#ffffff;border:1px solid rgba(18,18,18,0.12);border-radius:8px;box-shadow:0 16px 36px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.06);padding:24px 22px;z-index:1000;box-sizing:border-box;text-align:left;color:#121212;">
+		<div class="rasa-account-popover__header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+			<h3 class="rasa-account-popover__title" style="margin:0;font-size:1.6rem;font-weight:600;color:#121212;line-height:1.3;letter-spacing:-0.01em;"><?php echo esc_html( $title ); ?></h3>
+			<button type="button" class="rasa-account-popover__close" aria-label="<?php echo esc_attr( $close_label ); ?>" id="HeaderAccountClose" style="background:transparent;border:none;padding:6px;margin:-6px;cursor:pointer;color:rgba(18,18,18,0.55);display:flex;align-items:center;justify-content:center;border-radius:4px;">
 				<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<line x1="1" y1="1" x2="13" y2="13"></line>
 					<line x1="13" y1="1" x2="1" y2="13"></line>
@@ -584,18 +584,18 @@ function rasa_render_header_account_popover() {
 		</div>
 
 		<div class="rasa-account-popover__body">
-			<a href="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__sso-btn">
+			<a href="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__sso-btn" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;background:#5a31f4;color:#ffffff !important;border:none;border-radius:6px;font-weight:600;font-size:1.45rem;text-align:center;text-decoration:none !important;box-sizing:border-box;box-shadow:0 2px 6px rgba(90,49,244,0.25);">
 				<span><?php echo esc_html( $btn_label ); ?></span>
 			</a>
 
-			<div class="rasa-account-popover__divider">
+			<div class="rasa-account-popover__divider" style="display:flex;align-items:center;gap:12px;margin:18px 0;color:rgba(18,18,18,0.45);font-size:1.15rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
 				<span><?php echo esc_html( $or_label ); ?></span>
 			</div>
 
 			<form method="get" action="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__email-form">
-				<div class="rasa-account-popover__input-wrap">
-					<input type="email" name="login_hint" class="rasa-account-popover__input" placeholder="<?php echo esc_attr( $email_placeholder ); ?>" required autocomplete="email" />
-					<button type="submit" class="rasa-account-popover__submit-btn" aria-label="Submit">
+				<div class="rasa-account-popover__input-wrap" style="position:relative;width:100%;">
+					<input type="email" name="login_hint" class="rasa-account-popover__input" placeholder="<?php echo esc_attr( $email_placeholder ); ?>" required autocomplete="email" style="width:100%;height:48px;padding:0 44px 0 16px;border:1px solid rgba(18,18,18,0.2);border-radius:6px;font-size:1.4rem;color:#121212;background:#ffffff;box-sizing:border-box;" />
+					<button type="submit" class="rasa-account-popover__submit-btn" aria-label="Submit" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:4px;color:rgba(18,18,18,0.6);cursor:pointer;padding:0;">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 							<line x1="5" y1="12" x2="19" y2="12"></line>
 							<polyline points="12 5 19 12 12 19"></polyline>
@@ -603,14 +603,14 @@ function rasa_render_header_account_popover() {
 					</button>
 				</div>
 
-				<label class="rasa-account-popover__consent">
-					<input type="checkbox" name="marketing_opt_in" value="1" />
+				<label class="rasa-account-popover__consent" style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;font-size:1.2rem;line-height:1.45;color:rgba(18,18,18,0.65);cursor:pointer;">
+					<input type="checkbox" name="marketing_opt_in" value="1" style="margin-top:2px;flex-shrink:0;accent-color:#5a31f4;" />
 					<span><?php echo esc_html( $consent_text ); ?></span>
 				</label>
 			</form>
 
-			<div class="rasa-account-popover__footer">
-				<a href="<?php echo esc_url( $orders_url ); ?>" class="rasa-account-popover__footer-link">
+			<div class="rasa-account-popover__footer" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid rgba(18,18,18,0.1);">
+				<a href="<?php echo esc_url( $orders_url ); ?>" class="rasa-account-popover__footer-link" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:#f9fafb;border:1px solid rgba(18,18,18,0.12);border-radius:6px;font-size:1.3rem;font-weight:500;color:#121212 !important;text-decoration:none !important;">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
 						<line x1="3" y1="6" x2="21" y2="6"></line>
@@ -618,7 +618,7 @@ function rasa_render_header_account_popover() {
 					</svg>
 					<span><?php echo esc_html( $orders_label ); ?></span>
 				</a>
-				<a href="<?php echo esc_url( $profile_url ); ?>" class="rasa-account-popover__footer-link">
+				<a href="<?php echo esc_url( $profile_url ); ?>" class="rasa-account-popover__footer-link" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:#f9fafb;border:1px solid rgba(18,18,18,0.12);border-radius:6px;font-size:1.3rem;font-weight:500;color:#121212 !important;text-decoration:none !important;">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
 						<circle cx="12" cy="7" r="4"></circle>

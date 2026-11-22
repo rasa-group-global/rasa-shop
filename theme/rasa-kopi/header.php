@@ -224,7 +224,7 @@ if ( $is_logged_in && $current_user ) {
 							<div class="menu-drawer__utility-links">
 								<a href="<?php echo esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ) ); ?>" class="menu-drawer__account link focus-inset h5 medium-hide large-up-hide">
 									<?php if ( $is_logged_in && ! empty( $user_initial ) ) : ?>
-										<span class="header__account-avatar-initial" aria-hidden="true"><?php echo esc_html( $user_initial ); ?></span>
+										<span class="header__account-avatar-initial" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#000000 !important;color:#ffffff !important;font-size:1.3rem;font-weight:700;line-height:1;text-transform:uppercase;vertical-align:middle;box-sizing:border-box;"><?php echo esc_html( $user_initial ); ?></span>
 									<?php else : ?>
 										<span class="svg-wrapper"><?php echo rasa_icon_raw( 'account' ); ?></span>
 									<?php endif; ?>
@@ -400,10 +400,10 @@ if ( $is_logged_in && $current_user ) {
 			</details-modal>
 
 			<!-- Account -->
-			<div class="header__account-wrapper">
+			<div class="header__account-wrapper" style="position:relative;display:inline-flex;align-items:center;">
 				<a href="<?php echo esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ) ); ?>" class="header__icon header__icon--account link focus-inset" id="HeaderAccountTrigger" role="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="HeaderAccountPopover">
 					<?php if ( $is_logged_in && ! empty( $user_initial ) ) : ?>
-						<span class="header__account-avatar-initial" aria-hidden="true"><?php echo esc_html( $user_initial ); ?></span>
+						<span class="header__account-avatar-initial" aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#000000 !important;color:#ffffff !important;font-size:1.3rem;font-weight:700;line-height:1;text-transform:uppercase;vertical-align:middle;box-sizing:border-box;"><?php echo esc_html( $user_initial ); ?></span>
 					<?php else : ?>
 						<span class="svg-wrapper"><?php echo rasa_icon_raw( 'account' ); ?></span>
 					<?php endif; ?>

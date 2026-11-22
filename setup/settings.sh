@@ -438,6 +438,21 @@ WP config set DISABLE_WP_CRON true --raw
 WP rewrite structure '/%postname%/' --hard
 WP rewrite flush --hard
 
+echo "==> Centralized Rasa Keycloak SSO & RasaApi config sync..."
+KC_ENABLED="${RASA_KEYCLOAK_ENABLED:-1}"
+KC_URL="${RASA_KEYCLOAK_URL:-https://sso-dev.rasagroup.global}"
+KC_REALM="${RASA_KEYCLOAK_REALM:-rasa}"
+KC_CLIENT_ID="${RASA_KEYCLOAK_CLIENT_ID:-rasa-commerce}"
+KC_CLIENT_SECRET="${RASA_KEYCLOAK_CLIENT_SECRET:-rasa-commerce-secret-dev-2026}"
+API_BASE_URL="${RASA_API_BASE_URL:-https://api-dev.rasagroup.global/api/v1}"
+
+WP option update rasa_keycloak_enabled "$KC_ENABLED"
+WP option update rasa_keycloak_url "$KC_URL"
+WP option update rasa_keycloak_realm "$KC_REALM"
+WP option update rasa_keycloak_client_id "$KC_CLIENT_ID"
+WP option update rasa_keycloak_client_secret "$KC_CLIENT_SECRET"
+WP option update rasa_api_base_url "$API_BASE_URL"
+
 WP eval '
 echo "    WC Currency : " . get_woocommerce_currency() . "\n";
 echo "    Revolut Mode: " . ( get_option( "woocommerce_revolut_settings" )["mode"] ?? "unset" ) . "\n";

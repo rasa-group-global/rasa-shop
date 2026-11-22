@@ -48,6 +48,23 @@ jobs:
             if docker exec shop-woo-web test -f /usr/local/bin/wp; then
               docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp plugin is-active revolut-gateway-for-woocommerce --allow-root || \
                 docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp plugin install revolut-gateway-for-woocommerce --activate --allow-root
+
+              # Sync Keycloak SSO & RasaApi settings from .env into WordPress options
+              if [ -f .env ]; then
+                KC_ENABLED=$(grep -E '^RASA_KEYCLOAK_ENABLED=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "1")
+                KC_URL=$(grep -E '^RASA_KEYCLOAK_URL=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+                KC_REALM=$(grep -E '^RASA_KEYCLOAK_REALM=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "rasa")
+                KC_CLIENT_ID=$(grep -E '^RASA_KEYCLOAK_CLIENT_ID=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "rasa-commerce")
+                KC_CLIENT_SECRET=$(grep -E '^RASA_KEYCLOAK_CLIENT_SECRET=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+                API_BASE_URL=$(grep -E '^RASA_API_BASE_URL=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+
+                [ -n "$KC_ENABLED" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_enabled "$KC_ENABLED" --allow-root || true
+                [ -n "$KC_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_url "$KC_URL" --allow-root || true
+                [ -n "$KC_REALM" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_realm "$KC_REALM" --allow-root || true
+                [ -n "$KC_CLIENT_ID" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_id "$KC_CLIENT_ID" --allow-root || true
+                [ -n "$KC_CLIENT_SECRET" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_secret "$KC_CLIENT_SECRET" --allow-root || true
+                [ -n "$API_BASE_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_api_base_url "$API_BASE_URL" --allow-root || true
+              fi
             fi
 
             docker exec shop-woo-web mkdir -p /var/www/html/wp-content/uploads/wc-logs
@@ -102,6 +119,23 @@ jobs:
             if docker exec shop-woo-web test -f /usr/local/bin/wp; then
               docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp plugin is-active revolut-gateway-for-woocommerce --allow-root || \
                 docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp plugin install revolut-gateway-for-woocommerce --activate --allow-root
+
+              # Sync Keycloak SSO & RasaApi settings from .env into WordPress options
+              if [ -f .env ]; then
+                KC_ENABLED=$(grep -E '^RASA_KEYCLOAK_ENABLED=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "1")
+                KC_URL=$(grep -E '^RASA_KEYCLOAK_URL=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+                KC_REALM=$(grep -E '^RASA_KEYCLOAK_REALM=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "rasa")
+                KC_CLIENT_ID=$(grep -E '^RASA_KEYCLOAK_CLIENT_ID=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "rasa-commerce")
+                KC_CLIENT_SECRET=$(grep -E '^RASA_KEYCLOAK_CLIENT_SECRET=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+                API_BASE_URL=$(grep -E '^RASA_API_BASE_URL=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+
+                [ -n "$KC_ENABLED" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_enabled "$KC_ENABLED" --allow-root || true
+                [ -n "$KC_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_url "$KC_URL" --allow-root || true
+                [ -n "$KC_REALM" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_realm "$KC_REALM" --allow-root || true
+                [ -n "$KC_CLIENT_ID" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_id "$KC_CLIENT_ID" --allow-root || true
+                [ -n "$KC_CLIENT_SECRET" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_secret "$KC_CLIENT_SECRET" --allow-root || true
+                [ -n "$API_BASE_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_api_base_url "$API_BASE_URL" --allow-root || true
+              fi
             fi
 
             docker exec shop-woo-web mkdir -p /var/www/html/wp-content/uploads/wc-logs

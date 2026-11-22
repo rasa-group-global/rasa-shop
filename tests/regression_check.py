@@ -323,6 +323,28 @@ def main() -> None:
         with open(os.path.join(ROOT, '.github/workflows/deploy.yml'), 'r', encoding='utf-8') as f:
             y = yaml.safe_load(f)
         assert 'jobs' in y and 'deploy-dev' in y['jobs'] and 'deploy-prod' in y['jobs']
+
+        deploy_content = open(os.path.join(ROOT, '.github/workflows/deploy.yml'), 'r', encoding='utf-8').read()
+        for kc_opt in (
+            'wp option update rasa_keycloak_enabled',
+            'wp option update rasa_keycloak_url',
+            'wp option update rasa_keycloak_realm',
+            'wp option update rasa_keycloak_client_id',
+            'wp option update rasa_keycloak_client_secret',
+            'wp option update rasa_api_base_url',
+        ):
+            assert kc_opt in deploy_content, f'Missing {kc_opt} in .github/workflows/deploy.yml'
+
+        dc_content = open(os.path.join(ROOT, 'docker-compose.yml'), 'r', encoding='utf-8').read()
+        for env_var in (
+            'RASA_KEYCLOAK_ENABLED',
+            'RASA_KEYCLOAK_URL',
+            'RASA_KEYCLOAK_REALM',
+            'RASA_KEYCLOAK_CLIENT_ID',
+            'RASA_KEYCLOAK_CLIENT_SECRET',
+            'RASA_API_BASE_URL',
+        ):
+            assert env_var in dc_content, f'Missing {env_var} in docker-compose.yml'
     nginx = open(os.path.join(ROOT, 'conf/nginx/shop-woo.conf'), 'r', encoding='utf-8').read()
     assert 'location ^~ /wp-json/' in nginx and nginx.count('{') == nginx.count('}')
 

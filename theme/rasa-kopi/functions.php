@@ -638,4 +638,5 @@ add_action('template_redirect', function () {
 require_once RASA_DIR . '/inc/woo-compat.php';
 require_once RASA_DIR . '/inc/revolut-sandbox-compat.php';
 require_once RASA_DIR . '/inc/rasa-store-ops.php';
+require_once RASA_DIR . '/inc/rasa-keycloak-sso.php';
 require_once RASA_DIR . '/inc/template-tags.php';

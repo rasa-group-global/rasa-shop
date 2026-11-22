@@ -1308,3 +1308,527 @@ body.admin-bar .rasa-cart-drawer {
 				padding: 0 !important;
 				border: 0 !important;
 			}
+
+			/* ===== Header Account Popover Modal (Shop.rasakopi.coffee parity) ===== */
+			.header__account-wrapper {
+				position: relative;
+				display: inline-flex;
+				align-items: center;
+			}
+
+			.header__account-avatar-initial {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				width: 28px;
+				height: 28px;
+				border-radius: 50%;
+				background: #000000;
+				color: #ffffff !important;
+				font-size: 1.3rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				line-height: 1;
+				vertical-align: middle;
+				user-select: none;
+				transition: transform 0.15s ease, background-color 0.15s ease;
+			}
+
+			.header__icon--account:hover .header__account-avatar-initial {
+				transform: scale(1.05);
+				background: #1a1a1a;
+			}
+
+			.rasa-account-popover--logged-in {
+				width: 320px;
+				padding: 22px 20px 18px;
+			}
+
+			.rasa-account-popover__email {
+				font-size: 1.35rem;
+				color: rgba(18, 18, 18, 0.65);
+				margin: -10px 0 18px 0;
+				word-break: break-all;
+			}
+
+			.rasa-account-popover__grid-actions {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+				margin-bottom: 6px;
+			}
+
+			.rasa-account-popover__action-btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+				padding: 12px 14px;
+				background: #ffffff;
+				border: 1px solid rgba(18, 18, 18, 0.15);
+				border-radius: 6px;
+				font-size: 1.35rem;
+				font-weight: 500;
+				color: #121212 !important;
+				text-decoration: none !important;
+				transition: background-color 0.15s ease, border-color 0.15s ease;
+			}
+
+			.rasa-account-popover__action-btn:hover {
+				background: #f9fafb;
+				border-color: rgba(18, 18, 18, 0.35);
+			}
+
+			.rasa-account-popover__signout-wrap {
+				margin-top: 14px;
+				text-align: center;
+				border-top: 1px solid rgba(18, 18, 18, 0.08);
+				padding-top: 12px;
+			}
+
+			.rasa-account-popover__signout-link {
+				font-size: 1.25rem;
+				color: rgba(18, 18, 18, 0.6);
+				text-decoration: none !important;
+				transition: color 0.15s ease;
+			}
+
+			.rasa-account-popover__signout-link:hover {
+				color: #121212;
+				text-decoration: underline !important;
+			}
+
+			.rasa-account-popover {
+				position: absolute;
+				top: calc(100% + 12px);
+				right: 0;
+				width: 360px;
+				max-width: calc(100vw - 32px);
+				background: #ffffff;
+				border: 1px solid rgba(18, 18, 18, 0.1);
+				border-radius: 8px;
+				box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+				padding: 24px 22px;
+				z-index: 1000;
+				box-sizing: border-box;
+				text-align: left;
+				color: #121212;
+			}
+
+			.rasa-account-popover[hidden] {
+				display: none !important;
+			}
+
+			.rasa-account-popover__header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 20px;
+			}
+
+			.rasa-account-popover__title {
+				margin: 0;
+				font-size: 1.6rem;
+				font-weight: 600;
+				color: #121212;
+				line-height: 1.3;
+				letter-spacing: -0.01em;
+			}
+
+			.rasa-account-popover__close {
+				background: transparent;
+				border: none;
+				padding: 6px;
+				margin: -6px;
+				cursor: pointer;
+				color: rgba(18, 18, 18, 0.55);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border-radius: 4px;
+				transition: color 0.15s ease, background-color 0.15s ease;
+			}
+
+			.rasa-account-popover__close:hover,
+			.rasa-account-popover__close:focus-visible {
+				color: #121212;
+				background-color: rgba(18, 18, 18, 0.05);
+			}
+
+			.rasa-account-popover__sso-btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 10px;
+				width: 100%;
+				padding: 13px 20px;
+				background: #5a31f4;
+				color: #ffffff !important;
+				border: none;
+				border-radius: 6px;
+				font-weight: 600;
+				font-size: 1.45rem;
+				text-align: center;
+				text-decoration: none !important;
+				box-sizing: border-box;
+				transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+				box-shadow: 0 2px 6px rgba(90, 49, 244, 0.25);
+			}
+
+			.rasa-account-popover__sso-btn:hover {
+				background: #4a21dc;
+				box-shadow: 0 4px 12px rgba(90, 49, 244, 0.35);
+			}
+
+			.rasa-account-popover__divider {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				margin: 18px 0;
+				color: rgba(18, 18, 18, 0.45);
+				font-size: 1.15rem;
+				font-weight: 600;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+			}
+
+			.rasa-account-popover__divider::before,
+			.rasa-account-popover__divider::after {
+				content: '';
+				flex: 1;
+				height: 1px;
+				background: rgba(18, 18, 18, 0.12);
+			}
+
+			.rasa-account-popover__input-wrap {
+				position: relative;
+				width: 100%;
+			}
+
+			.rasa-account-popover__input {
+				width: 100%;
+				height: 48px;
+				padding: 0 44px 0 16px;
+				border: 1px solid rgba(18, 18, 18, 0.2);
+				border-radius: 6px;
+				font-size: 1.4rem;
+				color: #121212;
+				background: #ffffff;
+				box-sizing: border-box;
+				transition: border-color 0.15s ease, box-shadow 0.15s ease;
+			}
+
+			.rasa-account-popover__input:focus {
+				outline: none;
+				border-color: #5a31f4;
+				box-shadow: 0 0 0 3px rgba(90, 49, 244, 0.15);
+			}
+
+			.rasa-account-popover__submit-btn {
+				position: absolute;
+				right: 8px;
+				top: 50%;
+				transform: translateY(-50%);
+				width: 32px;
+				height: 32px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background: transparent;
+				border: none;
+				border-radius: 4px;
+				color: rgba(18, 18, 18, 0.6);
+				cursor: pointer;
+				padding: 0;
+				transition: color 0.15s ease, background-color 0.15s ease;
+			}
+
+			.rasa-account-popover__submit-btn:hover {
+				color: #5a31f4;
+				background-color: rgba(90, 49, 244, 0.08);
+			}
+
+			.rasa-account-popover__consent {
+				display: flex;
+				align-items: flex-start;
+				gap: 10px;
+				margin-top: 14px;
+				font-size: 1.2rem;
+				line-height: 1.45;
+				color: rgba(18, 18, 18, 0.65);
+				cursor: pointer;
+				user-select: none;
+			}
+
+			.rasa-account-popover__consent input[type="checkbox"] {
+				margin-top: 2px;
+				flex-shrink: 0;
+				accent-color: #5a31f4;
+				cursor: pointer;
+			}
+
+			.rasa-account-popover__footer {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+				margin-top: 20px;
+				padding-top: 18px;
+				border-top: 1px solid rgba(18, 18, 18, 0.1);
+			}
+
+			.rasa-account-popover__footer-link {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+				padding: 10px 12px;
+				background: #f9fafb;
+				border: 1px solid rgba(18, 18, 18, 0.12);
+				border-radius: 6px;
+				font-size: 1.3rem;
+				font-weight: 500;
+				color: #121212 !important;
+				text-decoration: none !important;
+				transition: background-color 0.15s ease, border-color 0.15s ease;
+			}
+
+			.rasa-account-popover__footer-link:hover {
+				background: #f3f4f6;
+				border-color: rgba(18, 18, 18, 0.25);
+			}
+
+			@media screen and (max-width: 749px) {
+				.rasa-account-popover {
+					position: fixed;
+					top: auto;
+					bottom: 0;
+					left: 0;
+					right: 0;
+					width: 100%;
+					max-width: 100%;
+					border-radius: 16px 16px 0 0;
+					padding: 24px 20px 32px;
+					box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+				}
+			}
+
+			/* ===== Header Account Popover Modal (Shop.rasakopi.coffee parity) ===== */
+			.header__account-wrapper {
+				position: relative;
+				display: inline-flex;
+				align-items: center;
+			}
+
+			.rasa-account-popover {
+				position: absolute;
+				top: calc(100% + 12px);
+				right: 0;
+				width: 360px;
+				max-width: calc(100vw - 32px);
+				background: #ffffff;
+				border: 1px solid rgba(18, 18, 18, 0.1);
+				border-radius: 8px;
+				box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+				padding: 24px 22px;
+				z-index: 1000;
+				box-sizing: border-box;
+				text-align: left;
+				color: #121212;
+			}
+
+			.rasa-account-popover[hidden] {
+				display: none !important;
+			}
+
+			.rasa-account-popover__header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 20px;
+			}
+
+			.rasa-account-popover__title {
+				margin: 0;
+				font-size: 1.6rem;
+				font-weight: 600;
+				color: #121212;
+				line-height: 1.3;
+				letter-spacing: -0.01em;
+			}
+
+			.rasa-account-popover__close {
+				background: transparent;
+				border: none;
+				padding: 6px;
+				margin: -6px;
+				cursor: pointer;
+				color: rgba(18, 18, 18, 0.55);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border-radius: 4px;
+				transition: color 0.15s ease, background-color 0.15s ease;
+			}
+
+			.rasa-account-popover__close:hover,
+			.rasa-account-popover__close:focus-visible {
+				color: #121212;
+				background-color: rgba(18, 18, 18, 0.05);
+			}
+
+			.rasa-account-popover__sso-btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 10px;
+				width: 100%;
+				padding: 13px 20px;
+				background: #5a31f4;
+				color: #ffffff !important;
+				border: none;
+				border-radius: 6px;
+				font-weight: 600;
+				font-size: 1.45rem;
+				text-align: center;
+				text-decoration: none !important;
+				box-sizing: border-box;
+				transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+				box-shadow: 0 2px 6px rgba(90, 49, 244, 0.25);
+			}
+
+			.rasa-account-popover__sso-btn:hover {
+				background: #4a21dc;
+				box-shadow: 0 4px 12px rgba(90, 49, 244, 0.35);
+			}
+
+			.rasa-account-popover__divider {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				margin: 18px 0;
+				color: rgba(18, 18, 18, 0.45);
+				font-size: 1.15rem;
+				font-weight: 600;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+			}
+
+			.rasa-account-popover__divider::before,
+			.rasa-account-popover__divider::after {
+				content: '';
+				flex: 1;
+				height: 1px;
+				background: rgba(18, 18, 18, 0.12);
+			}
+
+			.rasa-account-popover__input-wrap {
+				position: relative;
+				width: 100%;
+			}
+
+			.rasa-account-popover__input {
+				width: 100%;
+				height: 48px;
+				padding: 0 44px 0 16px;
+				border: 1px solid rgba(18, 18, 18, 0.2);
+				border-radius: 6px;
+				font-size: 1.4rem;
+				color: #121212;
+				background: #ffffff;
+				box-sizing: border-box;
+				transition: border-color 0.15s ease, box-shadow 0.15s ease;
+			}
+
+			.rasa-account-popover__input:focus {
+				outline: none;
+				border-color: #5a31f4;
+				box-shadow: 0 0 0 3px rgba(90, 49, 244, 0.15);
+			}
+
+			.rasa-account-popover__submit-btn {
+				position: absolute;
+				right: 8px;
+				top: 50%;
+				transform: translateY(-50%);
+				width: 32px;
+				height: 32px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background: transparent;
+				border: none;
+				border-radius: 4px;
+				color: rgba(18, 18, 18, 0.6);
+				cursor: pointer;
+				padding: 0;
+				transition: color 0.15s ease, background-color 0.15s ease;
+			}
+
+			.rasa-account-popover__submit-btn:hover {
+				color: #5a31f4;
+				background-color: rgba(90, 49, 244, 0.08);
+			}
+
+			.rasa-account-popover__consent {
+				display: flex;
+				align-items: flex-start;
+				gap: 10px;
+				margin-top: 14px;
+				font-size: 1.2rem;
+				line-height: 1.45;
+				color: rgba(18, 18, 18, 0.65);
+				cursor: pointer;
+				user-select: none;
+			}
+
+			.rasa-account-popover__consent input[type="checkbox"] {
+				margin-top: 2px;
+				flex-shrink: 0;
+				accent-color: #5a31f4;
+				cursor: pointer;
+			}
+
+			.rasa-account-popover__footer {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+				margin-top: 20px;
+				padding-top: 18px;
+				border-top: 1px solid rgba(18, 18, 18, 0.1);
+			}
+
+			.rasa-account-popover__footer-link {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+				padding: 10px 12px;
+				background: #f9fafb;
+				border: 1px solid rgba(18, 18, 18, 0.12);
+				border-radius: 6px;
+				font-size: 1.3rem;
+				font-weight: 500;
+				color: #121212 !important;
+				text-decoration: none !important;
+				transition: background-color 0.15s ease, border-color 0.15s ease;
+			}
+
+			.rasa-account-popover__footer-link:hover {
+				background: #f3f4f6;
+				border-color: rgba(18, 18, 18, 0.25);
+			}
+
+			@media screen and (max-width: 749px) {
+				.rasa-account-popover {
+					position: fixed;
+					top: auto;
+					bottom: 0;
+					left: 0;
+					right: 0;
+					width: 100%;
+					max-width: 100%;
+					border-radius: 16px 16px 0 0;
+					padding: 24px 20px 32px;
+					box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+				}
+			}

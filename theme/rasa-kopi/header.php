@@ -7,6 +7,13 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 $cart_count = rasa_cart_count();
 $announcements = rasa_announcements();
+$is_logged_in = is_user_logged_in();
+$current_user = $is_logged_in ? wp_get_current_user() : null;
+$user_initial = '';
+if ( $is_logged_in && $current_user ) {
+	$name = $current_user->first_name ?: ( $current_user->display_name ?: $current_user->user_email );
+	$user_initial = strtoupper( mb_substr( trim( (string) $name ), 0, 1, 'UTF-8' ) );
+}
 ?>
 <!doctype html>
 <html class="js" <?php language_attributes(); ?>>
@@ -216,8 +223,12 @@ $announcements = rasa_announcements();
 							</nav>
 							<div class="menu-drawer__utility-links">
 								<a href="<?php echo esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ) ); ?>" class="menu-drawer__account link focus-inset h5 medium-hide large-up-hide">
-									<span class="svg-wrapper"><?php echo rasa_icon_raw( 'account' ); ?></span>
-									<?php echo esc_html( is_user_logged_in() ? rasa_tr( 'Konto', 'Account' ) : rasa_tr( 'Anmelden', 'Log in' ) ); ?>
+									<?php if ( $is_logged_in && ! empty( $user_initial ) ) : ?>
+										<span class="header__account-avatar-initial" aria-hidden="true"><?php echo esc_html( $user_initial ); ?></span>
+									<?php else : ?>
+										<span class="svg-wrapper"><?php echo rasa_icon_raw( 'account' ); ?></span>
+									<?php endif; ?>
+									<?php echo esc_html( $is_logged_in ? rasa_tr( 'Konto', 'Account' ) : rasa_tr( 'Anmelden', 'Log in' ) ); ?>
 								</a>
 								<div class="menu-drawer__localization header-localization">
 									<form method="post" action="<?php echo esc_url( home_url( '/' ) ); ?>" id="HeaderDrawerLanguageForm" class="localization-form">
@@ -389,10 +400,19 @@ $announcements = rasa_announcements();
 			</details-modal>
 
 			<!-- Account -->
-			<a href="<?php echo esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ) ); ?>" class="header__icon header__icon--account link focus-inset">
-				<span class="svg-wrapper"><?php echo rasa_icon_raw( 'account' ); ?></span>
-				<span class="visually-hidden"><?php echo esc_html( rasa_tr( 'Konto', 'Account' ) ); ?></span>
-			</a>
+			<div class="header__account-wrapper">
+				<a href="<?php echo esc_url( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ) ); ?>" class="header__icon header__icon--account link focus-inset" id="HeaderAccountTrigger" role="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="HeaderAccountPopover">
+					<?php if ( $is_logged_in && ! empty( $user_initial ) ) : ?>
+						<span class="header__account-avatar-initial" aria-hidden="true"><?php echo esc_html( $user_initial ); ?></span>
+					<?php else : ?>
+						<span class="svg-wrapper"><?php echo rasa_icon_raw( 'account' ); ?></span>
+					<?php endif; ?>
+					<span class="visually-hidden"><?php echo esc_html( rasa_tr( 'Konto', 'Account' ) ); ?></span>
+				</a>
+				<?php if ( function_exists( 'rasa_render_header_account_popover' ) ) : ?>
+					<?php rasa_render_header_account_popover(); ?>
+				<?php endif; ?>
+			</div>
 
 			<!-- Cart -->
 			<a href="<?php echo esc_url( function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' ) ); ?>" class="header__icon header__icon--cart link focus-inset" id="cart-icon-bubble">

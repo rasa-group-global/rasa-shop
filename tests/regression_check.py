@@ -486,6 +486,27 @@ def main() -> None:
     )
     print('Payment icons, currency postfix, Revolut banner & shipping safeguards: OK')
 
+    print('\n=== 10. HEADER ACCOUNT POPOVER & RASA ACCOUNT BRANDING ===')
+    header_src = open(os.path.join(ROOT, 'theme/rasa-kopi/header.php'), 'r', encoding='utf-8').read()
+    assert 'header__account-avatar-initial' in header_src, 'header.php missing header__account-avatar-initial'
+    assert 'header__account-avatar-initial' in ovr, 'rasa-overrides.css missing header__account-avatar-initial'
+    assert 'rasa-account-popover--logged-in' in tags_src, 'template-tags.php missing rasa-account-popover--logged-in'
+    assert 'rasa-account-popover--logged-in' in ovr, 'rasa-overrides.css missing rasa-account-popover--logged-in'
+    assert 'HeaderAccountTrigger' in header_src, 'header.php missing HeaderAccountTrigger'
+    assert 'rasa_render_header_account_popover' in header_src, 'header.php missing rasa_render_header_account_popover call'
+    assert 'rasa_render_header_account_popover' in tags_src, 'template-tags.php missing rasa_render_header_account_popover function'
+    assert 'HeaderAccountPopover' in tags_src, 'template-tags.php missing HeaderAccountPopover markup'
+    assert '.rasa-account-popover' in ovr, 'rasa-overrides.css missing .rasa-account-popover'
+    assert 'initHeaderAccountPopover' in shim_src, 'rasa-shim.js missing initHeaderAccountPopover'
+
+    kc_src = open(os.path.join(ROOT, 'theme/rasa-kopi/inc/rasa-keycloak-sso.php'), 'r', encoding='utf-8').read()
+    assert 'Mit Rasa Account anmelden' in kc_src and 'Sign in with Rasa Account' in kc_src, (
+        'rasa-keycloak-sso.php must use Rasa Account copy'
+    )
+    assert 'Mit Rasa SSO anmelden' not in kc_src, 'Old "Mit Rasa SSO anmelden" copy still present in rasa-keycloak-sso.php'
+    assert 'Login with Rasa SSO' not in kc_src, 'Old "Login with Rasa SSO" copy still present in rasa-keycloak-sso.php'
+    print('Header Account popover & Rasa Account branding: OK')
+
 
 if __name__ == '__main__':
     main()

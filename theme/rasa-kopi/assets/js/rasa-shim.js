@@ -534,9 +534,64 @@
 		observer.observe(document.body, { childList: true, subtree: true });
 	}
 
+	// Header Account Popover Modal
+	function initHeaderAccountPopover() {
+		var trigger = document.getElementById('HeaderAccountTrigger');
+		var popover = document.getElementById('HeaderAccountPopover');
+		var closeBtn = document.getElementById('HeaderAccountClose');
+		if (!trigger || !popover) return;
+
+		function openPopover() {
+			popover.hidden = false;
+			popover.classList.add('is-open');
+			trigger.setAttribute('aria-expanded', 'true');
+		}
+
+		function closePopover() {
+			popover.hidden = true;
+			popover.classList.remove('is-open');
+			trigger.setAttribute('aria-expanded', 'false');
+		}
+
+		trigger.addEventListener('click', function (e) {
+			if (trigger.getAttribute('aria-haspopup') === 'dialog') {
+				e.preventDefault();
+				if (popover.hidden) {
+					openPopover();
+				} else {
+					closePopover();
+				}
+			}
+		});
+
+		if (closeBtn) {
+			closeBtn.addEventListener('click', function (e) {
+				e.preventDefault();
+				closePopover();
+			});
+		}
+
+		document.addEventListener('click', function (e) {
+			if (!popover.hidden && !popover.contains(e.target) && !trigger.contains(e.target)) {
+				closePopover();
+			}
+		});
+
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' && !popover.hidden) {
+				closePopover();
+				trigger.focus();
+			}
+		});
+	}
+
 	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', initCheckoutDeclineGuard);
+		document.addEventListener('DOMContentLoaded', function () {
+			initCheckoutDeclineGuard();
+			initHeaderAccountPopover();
+		});
 	} else {
 		initCheckoutDeclineGuard();
+		initHeaderAccountPopover();
 	}
 })();

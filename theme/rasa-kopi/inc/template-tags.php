@@ -459,3 +459,174 @@ function rasa_footer_menu_items( $location ) {
 		array( 'title' => rasa_tr( 'Cookie-Einstellungen', 'Cookie Settings' ), 'url' => '#cookie-einstellungen' ),
 	);
 }
+
+/**
+ * Render Header Account Popover Modal (Shop.rasakopi.coffee parity).
+ * Supports both unauthenticated (sign in / create account) and logged-in (account summary) states.
+ */
+function rasa_render_header_account_popover() {
+	$is_logged_in = is_user_logged_in();
+	$current_user = $is_logged_in ? wp_get_current_user() : null;
+
+	$sso_url = function_exists( 'rasa_sso_login_url' )
+		? rasa_sso_login_url()
+		: ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ) );
+	$myaccount_url = function_exists( 'wc_get_page_permalink' )
+		? wc_get_page_permalink( 'myaccount' )
+		: home_url( '/my-account/' );
+	$orders_url = function_exists( 'wc_get_endpoint_url' )
+		? wc_get_endpoint_url( 'orders', '', $myaccount_url )
+		: home_url( '/my-account/orders/' );
+	$profile_url = function_exists( 'wc_get_endpoint_url' )
+		? wc_get_endpoint_url( 'edit-account', '', $myaccount_url )
+		: home_url( '/my-account/edit-account/' );
+
+	$close_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Schließen', 'Close' )
+		: 'Close';
+
+	if ( $is_logged_in && $current_user ) {
+		$account_title = function_exists( 'rasa_tr' )
+			? rasa_tr( 'Konto', 'Account' )
+			: 'Account';
+		$orders_label = function_exists( 'rasa_tr' )
+			? rasa_tr( 'Bestellungen', 'Orders' )
+			: 'Orders';
+		$profile_label = function_exists( 'rasa_tr' )
+			? rasa_tr( 'Profil', 'Profile' )
+			: 'Profile';
+		$logout_label = function_exists( 'rasa_tr' )
+			? rasa_tr( 'Abmelden', 'Sign out' )
+			: 'Sign out';
+		?>
+		<div id="HeaderAccountPopover" class="rasa-account-popover rasa-account-popover--logged-in" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( $account_title ); ?>" hidden>
+			<div class="rasa-account-popover__header">
+				<h3 class="rasa-account-popover__title"><?php echo esc_html( $account_title ); ?></h3>
+				<button type="button" class="rasa-account-popover__close" aria-label="<?php echo esc_attr( $close_label ); ?>" id="HeaderAccountClose">
+					<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<line x1="1" y1="1" x2="13" y2="13"></line>
+						<line x1="13" y1="1" x2="1" y2="13"></line>
+					</svg>
+				</button>
+			</div>
+
+			<div class="rasa-account-popover__body">
+				<div class="rasa-account-popover__email">
+					<?php echo esc_html( $current_user->user_email ); ?>
+				</div>
+
+				<div class="rasa-account-popover__grid-actions">
+					<a href="<?php echo esc_url( $orders_url ); ?>" class="rasa-account-popover__action-btn">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+							<line x1="3" y1="6" x2="21" y2="6"></line>
+							<path d="M16 10a4 4 0 0 1-8 0"></path>
+						</svg>
+						<span><?php echo esc_html( $orders_label ); ?></span>
+					</a>
+					<a href="<?php echo esc_url( $profile_url ); ?>" class="rasa-account-popover__action-btn">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+							<circle cx="12" cy="7" r="4"></circle>
+						</svg>
+						<span><?php echo esc_html( $profile_label ); ?></span>
+					</a>
+				</div>
+
+				<div class="rasa-account-popover__signout-wrap">
+					<a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="rasa-account-popover__signout-link">
+						<?php echo esc_html( $logout_label ); ?>
+					</a>
+				</div>
+			</div>
+		</div>
+		<?php
+		return;
+	}
+
+	$title = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Anmelden oder Konto erstellen', 'Sign in or create account' )
+		: 'Sign in or create account';
+	$btn_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Mit Rasa Account anmelden', 'Sign in with Rasa Account' )
+		: 'Sign in with Rasa Account';
+	$or_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'ODER', 'OR' )
+		: 'OR';
+	$email_placeholder = function_exists( 'rasa_tr' )
+		? rasa_tr( 'E-Mail', 'Email' )
+		: 'Email';
+	$consent_text = function_exists( 'rasa_tr' )
+		? rasa_tr(
+			'Ja, ich möchte Neuigkeiten, Angebote und Erinnerungen zu meinem Warenkorb per E-Mail erhalten. Du kannst dich jederzeit abmelden.',
+			'Yes, I would like to receive news, offers and reminders about my shopping cart by email. You can unsubscribe at any time.'
+		)
+		: 'Yes, I would like to receive news, offers and reminders about my shopping cart by email. You can unsubscribe at any time.';
+	$orders_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Bestellungen', 'Orders' )
+		: 'Orders';
+	$profile_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Profil', 'Profile' )
+		: 'Profile';
+	$close_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Schließen', 'Close' )
+		: 'Close';
+	?>
+	<div id="HeaderAccountPopover" class="rasa-account-popover" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( $title ); ?>" hidden>
+		<div class="rasa-account-popover__header">
+			<h3 class="rasa-account-popover__title"><?php echo esc_html( $title ); ?></h3>
+			<button type="button" class="rasa-account-popover__close" aria-label="<?php echo esc_attr( $close_label ); ?>" id="HeaderAccountClose">
+				<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<line x1="1" y1="1" x2="13" y2="13"></line>
+					<line x1="13" y1="1" x2="1" y2="13"></line>
+				</svg>
+			</button>
+		</div>
+
+		<div class="rasa-account-popover__body">
+			<a href="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__sso-btn">
+				<span><?php echo esc_html( $btn_label ); ?></span>
+			</a>
+
+			<div class="rasa-account-popover__divider">
+				<span><?php echo esc_html( $or_label ); ?></span>
+			</div>
+
+			<form method="get" action="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__email-form">
+				<div class="rasa-account-popover__input-wrap">
+					<input type="email" name="login_hint" class="rasa-account-popover__input" placeholder="<?php echo esc_attr( $email_placeholder ); ?>" required autocomplete="email" />
+					<button type="submit" class="rasa-account-popover__submit-btn" aria-label="Submit">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<line x1="5" y1="12" x2="19" y2="12"></line>
+							<polyline points="12 5 19 12 12 19"></polyline>
+						</svg>
+					</button>
+				</div>
+
+				<label class="rasa-account-popover__consent">
+					<input type="checkbox" name="marketing_opt_in" value="1" />
+					<span><?php echo esc_html( $consent_text ); ?></span>
+				</label>
+			</form>
+
+			<div class="rasa-account-popover__footer">
+				<a href="<?php echo esc_url( $orders_url ); ?>" class="rasa-account-popover__footer-link">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+						<line x1="3" y1="6" x2="21" y2="6"></line>
+						<path d="M16 10a4 4 0 0 1-8 0"></path>
+					</svg>
+					<span><?php echo esc_html( $orders_label ); ?></span>
+				</a>
+				<a href="<?php echo esc_url( $profile_url ); ?>" class="rasa-account-popover__footer-link">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+						<circle cx="12" cy="7" r="4"></circle>
+					</svg>
+					<span><?php echo esc_html( $profile_label ); ?></span>
+				</a>
+			</div>
+		</div>
+	</div>
+	<?php
+}

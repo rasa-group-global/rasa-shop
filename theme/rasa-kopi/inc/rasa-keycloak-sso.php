@@ -4,7 +4,7 @@
  *
  * Implements:
  * 1. OIDC Authorization Code + PKCE Flow (`?rasa_sso=login` -> Keycloak -> `?rasa_sso=callback`).
- * 2. "Login with Rasa SSO" button on WooCommerce My Account & Checkout login forms.
+ * 2. "Sign in with Rasa Account" button on WooCommerce My Account & Checkout login forms.
  * 3. Single Source of Truth Sync:
  *    - When a user signs in via Keycloak SSO, creates/updates the WooCommerce customer,
  *      stores `keycloak_id` (`keyloack_id`) and `_rasa_user_uuid` in `wp_usermeta`,
@@ -543,7 +543,7 @@ add_filter( 'authenticate', function ( $user, $username, $password ) {
 
 /**
  * ============================================================================
- * UI: Render "Login with Rasa SSO" Button on WooCommerce Login & My Account
+ * UI: Render "Sign in with Rasa Account" Button on WooCommerce Login & My Account
  * ============================================================================
  */
 function rasa_render_sso_login_button() {
@@ -553,8 +553,8 @@ function rasa_render_sso_login_button() {
 	}
 
 	$label = function_exists( 'rasa_tr' )
-		? rasa_tr( 'Mit Rasa SSO anmelden', 'Login with Rasa SSO' )
-		: 'Login with Rasa SSO';
+		? rasa_tr( 'Mit Rasa Account anmelden', 'Sign in with Rasa Account' )
+		: 'Sign in with Rasa Account';
 	$or_label = function_exists( 'rasa_tr' )
 		? rasa_tr( 'oder mit E-Mail anmelden', 'or sign in with email' )
 		: 'or sign in with email';
@@ -598,8 +598,8 @@ add_action( 'woocommerce_account_dashboard', function () {
 	}
 
 	$badge_title = function_exists( 'rasa_tr' )
-		? rasa_tr( 'Rasa SSO Verbundenes Konto', 'Rasa SSO Connected Account' )
-		: 'Rasa SSO Connected Account';
+		? rasa_tr( 'Rasa Account Verbunden', 'Rasa Account Connected' )
+		: 'Rasa Account Connected';
 	$points_label = function_exists( 'rasa_tr' )
 		? rasa_tr( 'Rasa Treuepunkte', 'Rasa Loyalty Points' )
 		: 'Rasa Loyalty Points';

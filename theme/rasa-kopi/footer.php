@@ -83,10 +83,10 @@ $legal_menu  = rasa_footer_menu_items( 'footer-legal' );
 									<div class="disclosure__list-wrapper language-selector" hidden>
 										<ul id="FooterLanguageList" role="list" class="disclosure__list list-unstyled">
 											<li class="disclosure__item" tabindex="-1">
-												<a class="link link--text disclosure__link caption-large focus-inset" href="#" hreflang="de" lang="de" data-value="de">Deutsch</a>
+												<a class="link link--text disclosure__link caption-large focus-inset" href="<?php echo esc_url( add_query_arg( 'lang', 'de' ) ); ?>" hreflang="de" lang="de" data-value="de" data-rasa-lang="de">Deutsch</a>
 											</li>
 											<li class="disclosure__item" tabindex="-1">
-												<a class="link link--text disclosure__link caption-large focus-inset" href="#" hreflang="en" lang="en" data-value="en">English</a>
+												<a class="link link--text disclosure__link caption-large focus-inset" href="<?php echo esc_url( add_query_arg( 'lang', 'en' ) ); ?>" hreflang="en" lang="en" data-value="en" data-rasa-lang="en">English</a>
 											</li>
 										</ul>
 									</div>

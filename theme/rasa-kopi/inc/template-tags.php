@@ -584,7 +584,7 @@ function rasa_render_header_account_popover() {
 		</div>
 
 		<div class="rasa-account-popover__body">
-			<a href="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__sso-btn" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;background:#5a31f4;color:#ffffff !important;border:none;border-radius:6px;font-weight:600;font-size:1.45rem;text-align:center;text-decoration:none !important;box-sizing:border-box;box-shadow:0 2px 6px rgba(90,49,244,0.25);">
+			<a href="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__sso-btn" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;background:#121212;color:#ffffff !important;border:1px solid #121212;border-radius:6px;font-weight:600;font-size:1.45rem;text-align:center;text-decoration:none !important;box-sizing:border-box;box-shadow:0 2px 6px rgba(0,0,0,0.15);transition:background-color 0.2s ease, transform 0.15s ease;">
 				<span><?php echo esc_html( $btn_label ); ?></span>
 			</a>
 
@@ -604,7 +604,7 @@ function rasa_render_header_account_popover() {
 				</div>
 
 				<label class="rasa-account-popover__consent" style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;font-size:1.2rem;line-height:1.45;color:rgba(18,18,18,0.65);cursor:pointer;">
-					<input type="checkbox" name="marketing_opt_in" value="1" style="margin-top:2px;flex-shrink:0;accent-color:#5a31f4;" />
+					<input type="checkbox" name="marketing_opt_in" value="1" style="margin-top:2px;flex-shrink:0;accent-color:#121212;" />
 					<span><?php echo esc_html( $consent_text ); ?></span>
 				</label>
 			</form>

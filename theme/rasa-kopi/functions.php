@@ -11,15 +11,24 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('RASA_VERSION', '1.0.24');
+define('RASA_VERSION', '1.0.27');
 define('RASA_DIR', get_template_directory());
 define('RASA_URI', get_template_directory_uri());
 
 /* ------------------------------------------------------------------ *
- * Language helper (cookie rasa_lang + integrasi TranslatePress bila aktif)
+ * Language helper (cookie rasa_lang + query param + integrasi TranslatePress bila aktif)
  * ------------------------------------------------------------------ */
 function rasa_current_lang()
 {
+	if (!empty($_GET['lang']) && in_array($_GET['lang'], array('de', 'en'), true)) {
+		return sanitize_text_field(wp_unslash($_GET['lang']));
+	}
+	if (!empty($_GET['locale_code']) && in_array($_GET['locale_code'], array('de', 'en'), true)) {
+		return sanitize_text_field(wp_unslash($_GET['locale_code']));
+	}
+	if (!empty($_GET['rasa_lang']) && in_array($_GET['rasa_lang'], array('de', 'en'), true)) {
+		return sanitize_text_field(wp_unslash($_GET['rasa_lang']));
+	}
 	if (isset($_COOKIE['rasa_lang']) && in_array($_COOKIE['rasa_lang'], array('de', 'en'), true)) {
 		return $_COOKIE['rasa_lang'];
 	}
@@ -44,19 +53,48 @@ add_filter('language_attributes', function ($output) {
 
 function rasa_handle_locale_switch()
 {
-	if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['locale_code'])) {
-		return;
+	$lang = '';
+	if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['locale_code'])) {
+		$lang = sanitize_text_field(wp_unslash($_POST['locale_code']));
+	} elseif (!empty($_GET['lang'])) {
+		$lang = sanitize_text_field(wp_unslash($_GET['lang']));
+	} elseif (!empty($_GET['locale_code'])) {
+		$lang = sanitize_text_field(wp_unslash($_GET['locale_code']));
+	} elseif (!empty($_GET['rasa_lang'])) {
+		$lang = sanitize_text_field(wp_unslash($_GET['rasa_lang']));
 	}
-	$lang = sanitize_text_field(wp_unslash($_POST['locale_code']));
+
 	if (!in_array($lang, array('de', 'en'), true)) {
 		return;
 	}
-	setcookie('rasa_lang', $lang, time() + 30 * DAY_IN_SECONDS, COOKIEPATH ? COOKIEPATH : '/', COOKIE_DOMAIN, is_ssl(), false);
+
+	$cookie_domain = defined('COOKIE_DOMAIN') && COOKIE_DOMAIN ? COOKIE_DOMAIN : '';
+	$is_secure = is_ssl() || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && 'https' === $_SERVER['HTTP_X_FORWARDED_PROTO']);
+
+	if (PHP_VERSION_ID >= 70300) {
+		setcookie('rasa_lang', $lang, array(
+			'expires'  => time() + 30 * DAY_IN_SECONDS,
+			'path'     => '/',
+			'domain'   => $cookie_domain,
+			'secure'   => $is_secure,
+			'httponly' => false,
+			'samesite' => 'Lax',
+		));
+	} else {
+		setcookie('rasa_lang', $lang, time() + 30 * DAY_IN_SECONDS, '/', $cookie_domain, $is_secure, false);
+	}
 	$_COOKIE['rasa_lang'] = $lang;
 
-	$referer = wp_get_referer() ?: home_url('/');
+	$referer = wp_get_referer();
+	if (!$referer) {
+		$req_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '/';
+		$referer = home_url($req_uri);
+	}
+	$referer = remove_query_arg(array('lang', 'locale_code', 'rasa_lang'), $referer);
+
 	$path = wp_parse_url($referer, PHP_URL_PATH) ?: '/';
 	$path = preg_replace('#^/en(/|$)#', '/', $path);
+	$query = wp_parse_url($referer, PHP_URL_QUERY);
 
 	// Hanya arahkan ke /en/ jika TranslatePress aktif DAN bahasa Inggris sudah dikonfigurasi di DB
 	$trp_has_en = false;
@@ -72,14 +110,49 @@ function rasa_handle_locale_switch()
 	}
 
 	if ($trp_has_en && $lang === 'en') {
-		$referer = home_url('/en' . ($path === '/' ? '/' : $path));
+		$target = home_url('/en' . ($path === '/' ? '/' : $path));
 	} else {
-		$referer = home_url($path);
+		$target = home_url($path);
 	}
-	wp_safe_redirect($referer);
+	if (!empty($query)) {
+		$target .= '?' . $query;
+	}
+
+	wp_safe_redirect($target);
 	exit;
 }
 add_action('init', 'rasa_handle_locale_switch');
+
+/* ------------------------------------------------------------------ *
+ * Customer Account (Shopify parity: Orders & Profile navigation)
+ * ------------------------------------------------------------------ */
+add_filter('woocommerce_account_menu_items', function ($items) {
+	return array(
+		'orders'       => function_exists('rasa_tr') ? rasa_tr('Bestellungen', 'Orders') : 'Orders',
+		'edit-account' => function_exists('rasa_tr') ? rasa_tr('Profil', 'Profile') : 'Profile',
+	);
+});
+
+add_action('template_redirect', function () {
+	if (function_exists('is_account_page') && is_account_page() && is_user_logged_in()) {
+		if (function_exists('WC') && isset(WC()->query)) {
+			$endpoint = WC()->query->get_current_endpoint();
+			if (empty($endpoint)) {
+				wp_safe_redirect(wc_get_account_endpoint_url('edit-account'));
+				exit;
+			}
+		}
+	}
+});
+
+add_action('wp_ajax_rasa_toggle_marketing_opt_in', function () {
+	if (!is_user_logged_in()) {
+		wp_send_json_error(array('message' => 'Unauthorized'), 401);
+	}
+	$opt_in = !empty($_POST['opt_in']) ? 1 : 0;
+	update_user_meta(get_current_user_id(), 'marketing_opt_in', $opt_in);
+	wp_send_json_success(array('opt_in' => $opt_in));
+});
 
 // Fallback Site Icon WordPress ke rasa-kopi-favicon.png bila belum diset di Customizer
 add_filter('get_site_icon_url', function ($url) {

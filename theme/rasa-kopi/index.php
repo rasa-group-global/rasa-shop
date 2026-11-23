@@ -13,6 +13,23 @@ if (function_exists('is_cart') && is_cart() && file_exists(RASA_DIR . '/woocomme
 	return;
 }
 
+if (function_exists('is_account_page') && is_account_page()) {
+	?>
+	<div class="rasa-account-page-wrapper">
+		<div class="page-width rasa-account-page-width">
+			<?php
+			while (have_posts()):
+				the_post();
+				the_content();
+			endwhile;
+			?>
+		</div>
+	</div>
+	<?php
+	get_footer();
+	return;
+}
+
 if (function_exists('is_checkout') && is_checkout()) {
 	$is_order_received = function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('order-received');
 	$checkout_title = function_exists('rasa_tr') ? rasa_tr('Kasse', 'Checkout') : get_the_title();

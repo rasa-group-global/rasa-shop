@@ -480,8 +480,10 @@
 			langForm.querySelectorAll('a[data-rasa-lang]').forEach(function (a) {
 				a.addEventListener('click', function (e) {
 					e.preventDefault();
+					var lang = a.getAttribute('data-rasa-lang') || 'de';
+					document.cookie = "rasa_lang=" + lang + "; path=/; max-age=" + (30 * 86400) + "; SameSite=Lax";
 					var input = langForm.querySelector('input[name="locale_code"]');
-					if (input) input.value = a.getAttribute('data-rasa-lang') || 'de';
+					if (input) input.value = lang;
 					langForm.submit();
 				});
 			});
@@ -587,13 +589,97 @@
 		});
 	}
 
+	// Universal Language Switcher Handler (Desktop Header, Mobile Drawer, Footer)
+	function initLanguageSwitcher() {
+		var forms = document.querySelectorAll('#HeaderLanguageForm, #FooterLanguageForm, #HeaderDrawerLanguageForm, .localization-form');
+		forms.forEach(function (form) {
+			var input = form.querySelector('input[name="locale_code"]');
+			var links = form.querySelectorAll('a[data-value], a[data-rasa-lang]');
+			links.forEach(function (a) {
+				if (a.dataset.rasaLangBound) return;
+				a.dataset.rasaLangBound = '1';
+				a.addEventListener('click', function (e) {
+					var lang = a.getAttribute('data-value') || a.getAttribute('data-rasa-lang') || 'de';
+					document.cookie = "rasa_lang=" + lang + "; path=/; max-age=" + (30 * 86400) + "; SameSite=Lax";
+					if (input) {
+						input.value = lang;
+					}
+					if (form && typeof form.submit === 'function' && form.getAttribute('method') === 'post') {
+						e.preventDefault();
+						form.submit();
+					}
+				});
+			});
+		});
+	}
+
+	// Customer Account Profile (Shopify Parity) - Toggle Contact Edit Form
+	function initAccountProfileToggle() {
+		var editBtn = document.getElementById('RasaToggleContactEdit');
+		var cancelBtn = document.getElementById('RasaCancelContactEdit');
+		var viewCard = document.getElementById('RasaContactCardView');
+		var formWrap = document.getElementById('RasaContactFormWrapper');
+		var mktToggle = document.getElementById('RasaMarketingToggle');
+
+		if (editBtn && formWrap) {
+			function showForm() {
+				formWrap.hidden = false;
+				formWrap.style.display = 'block';
+				if (viewCard) viewCard.style.display = 'none';
+				editBtn.style.display = 'none';
+			}
+
+			function hideForm() {
+				formWrap.hidden = true;
+				formWrap.style.display = 'none';
+				if (viewCard) viewCard.style.display = 'block';
+				editBtn.style.display = 'inline-flex';
+			}
+
+			editBtn.addEventListener('click', function (e) {
+				e.preventDefault();
+				showForm();
+			});
+
+			if (cancelBtn) {
+				cancelBtn.addEventListener('click', function (e) {
+					e.preventDefault();
+					hideForm();
+				});
+			}
+
+			if (document.querySelector('.woocommerce-error, .woocommerce-message') || window.location.hash === '#edit') {
+				showForm();
+			}
+		}
+
+		if (mktToggle) {
+			mktToggle.addEventListener('change', function () {
+				var optIn = mktToggle.checked ? 1 : 0;
+				var url = (window.RasaTheme && window.RasaTheme.homeUrl ? window.RasaTheme.homeUrl : '/') + 'wp-admin/admin-ajax.php';
+				var data = new FormData();
+				data.append('action', 'rasa_toggle_marketing_opt_in');
+				data.append('opt_in', optIn);
+				fetch(url, {
+					method: 'POST',
+					body: data,
+					credentials: 'same-origin'
+				}).catch(function () {});
+			});
+		}
+	}
+
 	if (document.readyState === 'loading') {
 		document.addEventListener('DOMContentLoaded', function () {
 			initCheckoutDeclineGuard();
 			initHeaderAccountPopover();
+			initLanguageSwitcher();
+			initAccountProfileToggle();
 		});
 	} else {
 		initCheckoutDeclineGuard();
 		initHeaderAccountPopover();
+		initLanguageSwitcher();
+		initAccountProfileToggle();
 	}
 })();

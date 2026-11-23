@@ -507,6 +507,34 @@ def main() -> None:
     assert 'Login with Rasa SSO' not in kc_src, 'Old "Login with Rasa SSO" copy still present in rasa-keycloak-sso.php'
     print('Header Account popover & Rasa Account branding: OK')
 
+    print('\n=== 11. LANGUAGE SWITCHER ROBUSTNESS & COOKIE SYNC ===')
+    loc_src = open(os.path.join(ROOT, 'theme/rasa-kopi/assets/js/localization-form.js'), 'r', encoding='utf-8').read()
+    assert 'initLanguageSwitcher' in shim_src, 'rasa-shim.js missing initLanguageSwitcher'
+    assert 'add_query_arg' in header_src, 'header.php language links must use real URLs via add_query_arg'
+    footer_src = open(os.path.join(ROOT, 'theme/rasa-kopi/footer.php'), 'r', encoding='utf-8').read()
+    assert 'add_query_arg' in footer_src, 'footer.php language links must use real URLs via add_query_arg'
+    assert 'rasa_handle_locale_switch' in func_src, 'functions.php missing rasa_handle_locale_switch'
+    assert '$_GET' in func_src and 'rasa_lang' in func_src, 'functions.php must support $_GET and cookie for language switching'
+    assert 'document.cookie' in loc_src and 'document.cookie' in shim_src, 'Both JS files must synchronize rasa_lang cookie on client'
+    print('Language switcher robustness & cookie sync: OK')
+
+    print('\n=== 12. CUSTOMER ACCOUNT PROFILE PARITY & TEMPLATES ===')
+    for tpl in ('my-account.php', 'navigation.php', 'form-edit-account.php', 'orders.php', 'dashboard.php'):
+        tpl_path = os.path.join(ROOT, 'theme/rasa-kopi/woocommerce/myaccount', tpl)
+        assert os.path.isfile(tpl_path), f'Missing WooCommerce account template {tpl_path}'
+        tpl_src = open(tpl_path, 'r', encoding='utf-8').read()
+        check_php_balance(tpl_src, tpl_path)
+
+    assert 'rasa-account-container' in ovr, 'rasa-overrides.css missing rasa-account-container'
+    assert 'rasa-account-nav' in ovr, 'rasa-overrides.css missing rasa-account-nav'
+    assert 'rasa-account-content' in ovr, 'rasa-overrides.css missing rasa-account-content'
+    assert 'rasa-account-card' in ovr, 'rasa-overrides.css missing rasa-account-card'
+    assert 'initAccountProfileToggle' in shim_src, 'rasa-shim.js missing initAccountProfileToggle'
+    assert 'woocommerce_account_menu_items' in func_src, 'functions.php missing woocommerce_account_menu_items filter'
+    assert 'wp_ajax_rasa_toggle_marketing_opt_in' in func_src, 'functions.php missing wp_ajax_rasa_toggle_marketing_opt_in'
+    assert 'is_account_page()' in idx_src, 'index.php missing is_account_page() layout branch'
+    print('Customer account profile parity & templates: OK')
+
 
 if __name__ == '__main__':
     main()

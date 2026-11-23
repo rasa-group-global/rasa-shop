@@ -648,7 +648,7 @@
 				});
 			}
 
-			if (document.querySelector('.woocommerce-error, .woocommerce-message') || window.location.hash === '#edit') {
+			if (document.querySelector('.rasa-account-page-wrapper .woocommerce-error') || window.location.hash === '#edit') {
 				showForm();
 			}
 		}

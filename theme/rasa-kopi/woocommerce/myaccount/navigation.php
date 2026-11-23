@@ -17,9 +17,12 @@ do_action( 'woocommerce_before_account_navigation' );
 		$is_active = false;
 		if ( function_exists( 'is_wc_endpoint_url' ) ) {
 			$is_active = is_wc_endpoint_url( $endpoint );
-		}
-		if ( ! $is_active && 'edit-account' === $endpoint && is_wc_endpoint_url( 'edit-account' ) ) {
-			$is_active = true;
+			if ( ! $is_active && 'orders' === $endpoint && is_wc_endpoint_url( 'view-order' ) ) {
+				$is_active = true;
+			}
+			if ( ! $is_active && 'edit-account' === $endpoint && ( is_wc_endpoint_url( 'edit-address' ) || ! is_wc_endpoint_url() ) ) {
+				$is_active = true;
+			}
 		}
 		$url = wc_get_account_endpoint_url( $endpoint );
 		?>

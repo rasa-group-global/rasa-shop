@@ -70,7 +70,7 @@ jobs:
               docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp cache flush --allow-root 2>/dev/null || true
               docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp w3-total-cache flush --allow-root 2>/dev/null || true
             fi
-            rm -rf "$WP_MOUNT/wp-content/cache/minify/*" "$WP_MOUNT/wp-content/cache/page_enhanced/*" 2>/dev/null || true
+            rm -rf "$WP_MOUNT/wp-content/cache/minify/"* "$WP_MOUNT/wp-content/cache/page_enhanced/"* 2>/dev/null || true
 
             docker exec shop-woo-web mkdir -p /var/www/html/wp-content/uploads/wc-logs
             docker exec shop-woo-web chown -R www-data:www-data /var/www/html/wp-content/uploads /var/www/html/wp-content/plugins
@@ -146,7 +146,7 @@ jobs:
               docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp cache flush --allow-root 2>/dev/null || true
               docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp w3-total-cache flush --allow-root 2>/dev/null || true
             fi
-            rm -rf "$WP_MOUNT/wp-content/cache/minify/*" "$WP_MOUNT/wp-content/cache/page_enhanced/*" 2>/dev/null || true
+            rm -rf "$WP_MOUNT/wp-content/cache/minify/"* "$WP_MOUNT/wp-content/cache/page_enhanced/"* 2>/dev/null || true
 
             docker exec shop-woo-web mkdir -p /var/www/html/wp-content/uploads/wc-logs
             docker exec shop-woo-web chown -R www-data:www-data /var/www/html/wp-content/uploads /var/www/html/wp-content/plugins

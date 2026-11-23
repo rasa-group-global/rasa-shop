@@ -525,14 +525,25 @@ def main() -> None:
         tpl_src = open(tpl_path, 'r', encoding='utf-8').read()
         check_php_balance(tpl_src, tpl_path)
 
-    assert 'rasa-account-container' in ovr, 'rasa-overrides.css missing rasa-account-container'
-    assert 'rasa-account-nav' in ovr, 'rasa-overrides.css missing rasa-account-nav'
-    assert 'rasa-account-content' in ovr, 'rasa-overrides.css missing rasa-account-content'
-    assert 'rasa-account-card' in ovr, 'rasa-overrides.css missing rasa-account-card'
+    acct_css_path = os.path.join(ROOT, 'theme/rasa-kopi/assets/css/rasa-account.css')
+    assert os.path.isfile(acct_css_path), f'Missing dedicated account CSS {acct_css_path}'
+    acct_css = open(acct_css_path, 'r', encoding='utf-8').read()
+    assert 'rasa-account-container' in acct_css, 'rasa-account.css missing rasa-account-container'
+    assert 'rasa-account-nav' in acct_css, 'rasa-account.css missing rasa-account-nav'
+    assert 'rasa-account-content' in acct_css, 'rasa-account.css missing rasa-account-content'
+    assert 'rasa-account-card' in acct_css, 'rasa-account.css missing rasa-account-card'
     assert 'initAccountProfileToggle' in shim_src, 'rasa-shim.js missing initAccountProfileToggle'
     assert 'woocommerce_account_menu_items' in func_src, 'functions.php missing woocommerce_account_menu_items filter'
     assert 'wp_ajax_rasa_toggle_marketing_opt_in' in func_src, 'functions.php missing wp_ajax_rasa_toggle_marketing_opt_in'
     assert 'is_account_page()' in idx_src, 'index.php missing is_account_page() layout branch'
+
+    assert '/wp-content/cache/minify/' in nginx and 'must-revalidate' in nginx, (
+        'shop-woo.conf must serve W3TC minify assets with must-revalidate instead of immutable'
+    )
+    deploy_src = open(os.path.join(ROOT, '.github/workflows/deploy.yml'), 'r', encoding='utf-8').read()
+    assert 'w3-total-cache flush' in deploy_src and 'cache/minify' in deploy_src, (
+        'deploy.yml must flush WP/W3TC cache and purge minify files on deploy'
+    )
     print('Customer account profile parity & templates: OK')
 
 

@@ -51,7 +51,7 @@ $terms_label     = function_exists( 'rasa_tr' ) ? rasa_tr( 'AGB & Datenschutz', 
 			<span class="rasa-account-card__value"><?php echo esc_html( $user->user_email ); ?></span>
 		</div>
 		<?php if ( ! empty( $user->first_name ) || ! empty( $user->last_name ) ) : ?>
-			<div class="rasa-account-card__row" style="margin-top: 10px;">
+			<div class="rasa-account-card__row">
 				<span class="rasa-account-card__label"><?php echo esc_html( function_exists( 'rasa_tr' ) ? rasa_tr( 'Name', 'Name' ) : 'Name' ); ?></span>
 				<span class="rasa-account-card__value"><?php echo esc_html( trim( $user->first_name . ' ' . $user->last_name ) ); ?></span>
 			</div>
@@ -63,7 +63,7 @@ $terms_label     = function_exists( 'rasa_tr' ) ? rasa_tr( 'AGB & Datenschutz', 
 		<form class="woocommerce-EditAccountForm edit-account rasa-account-edit-form" action="" method="post" <?php do_action( 'woocommerce_edit_account_form_tag' ); ?>>
 			<?php do_action( 'woocommerce_edit_account_form_start' ); ?>
 
-			<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+			<div class="rasa-account-edit-form__grid">
 				<p class="woocommerce-form-row woocommerce-form-row--first form-row form-row-first">
 					<label for="account_first_name"><?php esc_html_e( 'First name', 'woocommerce' ); ?>&nbsp;<span class="required">*</span></label>
 					<input type="text" class="woocommerce-Input woocommerce-Input--text input-text" name="account_first_name" id="account_first_name" autocomplete="given-name" value="<?php echo esc_attr( $user->first_name ); ?>" />
@@ -78,7 +78,7 @@ $terms_label     = function_exists( 'rasa_tr' ) ? rasa_tr( 'AGB & Datenschutz', 
 			<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
 				<label for="account_display_name"><?php esc_html_e( 'Display name', 'woocommerce' ); ?>&nbsp;<span class="required">*</span></label>
 				<input type="text" class="woocommerce-Input woocommerce-Input--text input-text" name="account_display_name" id="account_display_name" value="<?php echo esc_attr( $user->display_name ); ?>" />
-				<small style="display:block;margin-top:4px;color:rgba(255,255,255,0.5);font-size:1.2rem;"><?php esc_html_e( 'This will be how your name will be displayed in the account section and in reviews', 'woocommerce' ); ?></small>
+				<small class="rasa-account-edit-form__hint"><?php esc_html_e( 'This will be how your name will be displayed in the account section and in reviews', 'woocommerce' ); ?></small>
 			</p>
 			<div class="clear"></div>
 
@@ -114,9 +114,9 @@ $terms_label     = function_exists( 'rasa_tr' ) ? rasa_tr( 'AGB & Datenschutz', 
 
 			<?php do_action( 'woocommerce_edit_account_form_end' ); ?>
 
-			<div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
+			<div class="rasa-account-edit-form__actions">
 				<?php wp_nonce_field( 'save_account_details', 'save-account-details-nonce' ); ?>
-				<button type="submit" class="woocommerce-Button button" name="save_account_details" value="<?php esc_attr_e( 'Save changes', 'woocommerce' ); ?>" style="background:#121212 !important;color:#ffffff !important;border:1px solid #121212 !important;border-radius:6px !important;padding:12px 24px !important;font-weight:600 !important;cursor:pointer;">
+				<button type="submit" class="woocommerce-Button button rasa-account-btn rasa-account-btn--primary" name="save_account_details" value="<?php esc_attr_e( 'Save changes', 'woocommerce' ); ?>">
 					<?php esc_html_e( 'Save changes', 'woocommerce' ); ?>
 				</button>
 				<button type="button" class="rasa-account-btn" id="RasaCancelContactEdit">
@@ -138,8 +138,8 @@ $terms_label     = function_exists( 'rasa_tr' ) ? rasa_tr( 'AGB & Datenschutz', 
 	</div>
 
 	<div class="rasa-account-card">
-		<div style="display:flex;align-items:center;gap:14px;">
-			<div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);flex-shrink:0;">
+		<div class="rasa-account-addr">
+			<div class="rasa-account-addr__icon">
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
 					<circle cx="12" cy="10" r="3"></circle>
@@ -147,14 +147,14 @@ $terms_label     = function_exists( 'rasa_tr' ) ? rasa_tr( 'AGB & Datenschutz', 
 			</div>
 			<div>
 				<?php if ( $has_address ) : ?>
-					<div style="font-size:1.4rem;font-weight:500;color:#ffffff;line-height:1.4;">
+					<div class="rasa-account-addr__line1">
 						<?php echo esc_html( $billing_address_1 ); ?>
 					</div>
-					<div style="font-size:1.3rem;color:rgba(255,255,255,0.65);">
+					<div class="rasa-account-addr__line2">
 						<?php echo esc_html( trim( $billing_postcode . ' ' . $billing_city . ', ' . $billing_country ) ); ?>
 					</div>
 				<?php else : ?>
-					<div style="font-size:1.4rem;color:rgba(255,255,255,0.65);">
+					<div class="rasa-account-addr__empty">
 						<?php echo esc_html( $no_addr_label ); ?>
 					</div>
 				<?php endif; ?>
@@ -170,13 +170,13 @@ $terms_label     = function_exists( 'rasa_tr' ) ? rasa_tr( 'AGB & Datenschutz', 
 	</div>
 
 	<div class="rasa-account-card">
-		<div style="display:flex;align-items:center;justify-content:space-between;">
-			<div style="display:flex;align-items:center;gap:12px;">
-				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="opacity:0.8;">
+		<div class="rasa-account-marketing__row">
+			<div class="rasa-account-marketing__info">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
 					<polyline points="22,6 12,13 2,6"></polyline>
 				</svg>
-				<span style="font-size:1.4rem;font-weight:500;color:#ffffff;">Email</span>
+				<span class="rasa-account-marketing__label">Email</span>
 			</div>
 			<label class="rasa-toggle-switch" aria-label="Email Marketing Preference">
 				<input type="checkbox" id="RasaMarketingToggle" <?php checked( $marketing_opt_in ); ?> />
@@ -187,20 +187,20 @@ $terms_label     = function_exists( 'rasa_tr' ) ? rasa_tr( 'AGB & Datenschutz', 
 </section>
 
 <!-- ================= 4. SIGN OUT ================= -->
-<section class="rasa-account-section" style="margin-top: 40px;">
-	<div style="display:flex;align-items:center;gap:16px;">
-		<a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="rasa-account-btn" style="padding: 9px 20px; font-weight: 500;">
+<section class="rasa-account-section rasa-account-section--signout">
+	<div class="rasa-account-signout__row">
+		<a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="rasa-account-btn rasa-account-btn--signout">
 			<?php echo esc_html( $signout_label ); ?>
 		</a>
-		<span style="font-size:1.35rem;color:rgba(255,255,255,0.65);">
+		<span class="rasa-account-signout__note">
 			<?php echo esc_html( $signout_all ); ?>
 		</span>
 	</div>
 </section>
 
 <!-- ================= 5. FOOTER POLICIES ================= -->
-<div style="margin-top: 60px; padding-top: 20px;">
-	<a href="<?php echo esc_url( home_url( '/agb/' ) ); ?>" style="font-size:1.25rem;color:rgba(255,255,255,0.5);text-decoration:none;">
+<div class="rasa-account-terms">
+	<a href="<?php echo esc_url( home_url( '/agb/' ) ); ?>" class="rasa-account-terms__link">
 		<?php echo esc_html( $terms_label ); ?>
 	</a>
 </div>

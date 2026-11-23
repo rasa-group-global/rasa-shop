@@ -65,7 +65,12 @@ jobs:
                 [ -n "$KC_CLIENT_SECRET" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_secret "$KC_CLIENT_SECRET" --allow-root || true
                 [ -n "$API_BASE_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_api_base_url "$API_BASE_URL" --allow-root || true
               fi
+
+              # Flush WordPress & W3 Total Cache so newly deployed theme CSS/JS take effect immediately
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp cache flush --allow-root 2>/dev/null || true
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp w3-total-cache flush --allow-root 2>/dev/null || true
             fi
+            rm -rf "$WP_MOUNT/wp-content/cache/minify/*" "$WP_MOUNT/wp-content/cache/page_enhanced/*" 2>/dev/null || true
 
             docker exec shop-woo-web mkdir -p /var/www/html/wp-content/uploads/wc-logs
             docker exec shop-woo-web chown -R www-data:www-data /var/www/html/wp-content/uploads /var/www/html/wp-content/plugins
@@ -136,7 +141,12 @@ jobs:
                 [ -n "$KC_CLIENT_SECRET" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_secret "$KC_CLIENT_SECRET" --allow-root || true
                 [ -n "$API_BASE_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_api_base_url "$API_BASE_URL" --allow-root || true
               fi
+
+              # Flush WordPress & W3 Total Cache so newly deployed theme CSS/JS take effect immediately
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp cache flush --allow-root 2>/dev/null || true
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp w3-total-cache flush --allow-root 2>/dev/null || true
             fi
+            rm -rf "$WP_MOUNT/wp-content/cache/minify/*" "$WP_MOUNT/wp-content/cache/page_enhanced/*" 2>/dev/null || true
 
             docker exec shop-woo-web mkdir -p /var/www/html/wp-content/uploads/wc-logs
             docker exec shop-woo-web chown -R www-data:www-data /var/www/html/wp-content/uploads /var/www/html/wp-content/plugins

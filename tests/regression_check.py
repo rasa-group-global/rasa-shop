@@ -544,6 +544,13 @@ def main() -> None:
     assert 'w3-total-cache flush' in deploy_src and 'cache/minify' in deploy_src, (
         'deploy.yml must flush WP/W3TC cache and purge minify files on deploy'
     )
+    arch_src = open(os.path.join(ROOT, 'theme/rasa-kopi/woocommerce/archive-product.php'), 'r', encoding='utf-8').read()
+    assert 'rasa-facets-bar__sort-form' in arch_src and 'facet-filters__field' in arch_src, (
+        'archive-product.php must wrap SortBy select inside .facet-filters__field > .select so base.css width:100% never stacks Sort by vertically'
+    )
+    assert 'rasa-facets-bar__sort-form' in ovr and 'width: auto !important' in ovr, (
+        'rasa-overrides.css must force width: auto !important on collection sort select'
+    )
     print('Customer account profile parity & templates: OK')
 
 

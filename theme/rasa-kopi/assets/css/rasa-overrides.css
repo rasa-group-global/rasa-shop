@@ -1613,3 +1613,111 @@ body.admin-bar .rasa-cart-drawer {
 					box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
 				}
 			}
+
+/* ===== Collection Page Facets & Sort Bar (Dawn parity) ===== */
+.rasa-facets-bar {
+	display: flex !important;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1.2rem 2.4rem;
+	padding-top: 0 !important;
+	font-size: 1.4rem;
+	color: rgba(18, 18, 18, 0.75);
+}
+
+.rasa-facets-bar__filters {
+	display: flex !important;
+	align-items: center !important;
+	gap: 2.4rem;
+	flex-wrap: wrap;
+	margin: 0 !important;
+}
+
+.rasa-facets-bar__heading {
+	margin: 0 !important;
+	font-family: inherit;
+	font-weight: 400;
+	font-size: 1.4rem;
+	color: rgba(18, 18, 18, 0.75);
+}
+
+.rasa-facets-bar__filter-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6rem;
+	cursor: pointer;
+	color: rgba(18, 18, 18, 0.75);
+}
+
+.rasa-facets-bar__sort-form {
+	display: flex !important;
+	align-items: center !important;
+	flex-wrap: wrap;
+	gap: 1rem 2.4rem !important;
+	margin: 0 !important;
+}
+
+.rasa-facets-bar__sort-form .facet-filters__field {
+	display: inline-flex;
+	align-items: center;
+	gap: 1.2rem;
+	flex-grow: 0;
+	flex-wrap: nowrap;
+}
+
+.rasa-facets-bar__sort-form .facet-filters__label {
+	margin: 0 !important;
+	font-size: 1.4rem;
+	color: rgba(18, 18, 18, 0.75);
+	white-space: nowrap;
+}
+
+.rasa-facets-bar__sort-form .select {
+	width: auto !important;
+	display: inline-flex;
+	align-items: center;
+	position: relative;
+}
+
+.rasa-facets-bar__sort-form .select::before,
+.rasa-facets-bar__sort-form .select::after {
+	content: none !important;
+}
+
+.rasa-facets-bar__sort-form .select__select.facet-filters__sort {
+	width: auto !important;
+	min-width: 0 !important;
+	height: auto !important;
+	min-height: 0 !important;
+	padding: 0 2rem 0 0 !important;
+	margin: 0 !important;
+	border: 0 !important;
+	background: transparent !important;
+	font-family: inherit;
+	font-size: 1.4rem !important;
+	line-height: 1.4 !important;
+	color: rgba(18, 18, 18, 0.85) !important;
+	box-shadow: none !important;
+	cursor: pointer;
+}
+
+.rasa-facets-bar__sort-form .select .svg-wrapper {
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 1rem;
+	height: 0.6rem;
+	display: inline-flex;
+	align-items: center;
+	pointer-events: none;
+	color: rgba(18, 18, 18, 0.75);
+}
+
+.rasa-facets-bar__sort-form .product-count__text {
+	margin: 0 !important;
+	font-size: 1.4rem;
+	color: rgba(18, 18, 18, 0.7);
+	white-space: nowrap;
+}

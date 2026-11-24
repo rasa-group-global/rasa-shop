@@ -544,6 +544,9 @@ def main() -> None:
     assert 'w3-total-cache flush' in deploy_src and 'cache/minify' in deploy_src, (
         'deploy.yml must flush WP/W3TC cache and purge minify files on deploy'
     )
+    assert deploy_src.count('core is-installed') >= 2 and 'disable_functions=' in deploy_src, (
+        'deploy.yml must guard WP-CLI steps with wp core is-installed and pass -d disable_functions='
+    )
     arch_src = open(os.path.join(ROOT, 'theme/rasa-kopi/woocommerce/archive-product.php'), 'r', encoding='utf-8').read()
     assert 'rasa-facets-bar__sort-form' in arch_src and 'facet-filters__field' in arch_src, (
         'archive-product.php must wrap SortBy select inside .facet-filters__field > .select so base.css width:100% never stacks Sort by vertically'

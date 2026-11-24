@@ -34,3 +34,6 @@ wp-config.php
 Thumbs.db
 .idea/
 .vscode/
+
+## wp-cli binary phar (di-install via entrypoint, bukan repo)
+.wp-cli/

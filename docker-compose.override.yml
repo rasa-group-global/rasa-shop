@@ -1,0 +1,26 @@
+# Override RASA-COMM PROD (142.93.137.154).
+# 1) nginx publish port 80/443 langsung (server dedicated, tanpa shared proxy)
+# 2) wp-cli bind-mount dari host → /usr/local/bin/wp (persisten antar recreate).
+#    Workflow deploy-prod memakai: php -d open_basedir= /usr/local/bin/wp
+# Volume dipetakan ke data lama project "woocommerce".
+services:
+  shop-woo-nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - wp_content:/var/www/html:ro
+      - ./conf/nginx/shop-woo-prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+  shop-woo-web:
+    volumes:
+      - wp_content:/var/www/html
+      - ./php/override.ini:/usr/local/etc/php/conf.d/99-rasa-override.ini:ro
+      - ./.wp-cli/wp-cli.phar:/usr/local/bin/wp:ro
+volumes:
+  wp_content:
+    name: woocommerce_wp_content
+    external: true
+  wp_db_data:
+    name: woocommerce_wp_db_data
+    external: true

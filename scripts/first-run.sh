@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════
 # First-run bootstrap: install WP core via WP-CLI, aktifkan
-# WooCommerce, set permalinks + currency IDR, hardening dasar.
+# WooCommerce, set permalinks + currency EUR, hardening dasar.
 # Idempotent — aman dijalankan ulang.
 #
 # Prasyarat: docker compose up -d sudah jalan (db healthy).
@@ -66,12 +66,23 @@ WP plugin activate woocommerce || true
 echo "▸ Install Wordfence (security)..."
 WP plugin install wordfence --activate || true
 
-echo "▸ WooCommerce settings (IDR)..."
-WP option update woocommerce_currency 'IDR'
-WP option update woocommerce_currency_pos 'left'
-WP option update woocommerce_thousand_sep ','
-WP option update woocommerce_decimal_point '.'
-WP option update woocommerce_decimal_sep '.'
+echo "▸ Install TranslatePress (multilingual DE/EN)..."
+WP plugin install translatepress-multilingual --activate || true
+
+echo "▸ Install Revolut Gateway for WooCommerce..."
+WP plugin install revolut-gateway-for-woocommerce --activate || true
+
+echo "▸ WooCommerce settings (EUR & Germany base)..."
+WP option update woocommerce_default_country 'DE'
+WP option update woocommerce_default_customer_address 'base'
+WP option update woocommerce_shipping_cost_requires_address 'no'
+WP option update woocommerce_store_city 'Berlin'
+WP option update woocommerce_store_postcode '10405'
+WP option update woocommerce_currency 'EUR'
+WP option update woocommerce_currency_pos 'right_space'
+WP option update woocommerce_price_thousand_sep '.'
+WP option update woocommerce_price_decimal_sep ','
+WP option update woocommerce_price_num_decimals '2'
 
 echo "▸ Update siteurl/home..."
 WP option update siteurl "$WP_URL"
@@ -86,5 +97,5 @@ echo "════════════════════════�
 echo "  ✓ Bootstrap selesai."
 echo "  WP:      $WP_URL"
 echo "  Admin:   $WP_ADMIN_USER / (password dari .env)"
-echo "  Woo:     active, currency IDR"
+echo "  Woo:     active, currency EUR (run 'bash setup/settings.sh' for full DE store settings)"
 echo "═════════════════════════════════════════════════════════"

@@ -864,6 +864,8 @@ class SlideshowComponent extends SliderComponent {
           { once: true }
         );
       });
+    } else {
+      this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     }
 
     if (this.slider.getAttribute('data-autoplay') === 'true') this.setAutoPlay();
@@ -1039,7 +1041,7 @@ class SlideshowComponent extends SliderComponent {
       } else if (this.autoplayButtonIsSetToPlay) {
         this.pause();
       }
-    } else if (this.announcementBarSlider.contains(event.target)) {
+    } else if (this.announcementBarSlider && this.announcementBarSlider.contains(event.target)) {
       this.pause();
     }
   }

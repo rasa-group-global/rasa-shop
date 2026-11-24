@@ -1,0 +1,161 @@
+name: Deploy Rasa WooCommerce Theme
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev (shop-dev.rasakopi.coffee)
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Pull & sync theme on Dev VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          port: ${{ secrets.DEV_SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            APP_DIR="/var/www/RASA/wordpress-woo"
+            WP_MOUNT=$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/var/www/html"}}{{.Source}}{{end}}{{end}}' shop-woo-web)
+            VOL_THEME="$WP_MOUNT/wp-content/themes/rasa-kopi"
+            CTR_THEME="/var/www/html/wp-content/themes/rasa-kopi"
+
+            cd "$APP_DIR"
+            git fetch origin dev
+            git checkout dev
+            git reset --hard origin/dev
+
+            mkdir -p "$VOL_THEME"
+            rsync -a --delete theme/rasa-kopi/ "$VOL_THEME/"
+
+            docker exec shop-woo-web chown -R www-data:www-data "$CTR_THEME"
+            docker exec shop-woo-web find "$CTR_THEME" -type f -exec chmod 644 {} +
+            docker exec shop-woo-web find "$CTR_THEME" -type d -exec chmod 755 {} +
+            docker exec shop-woo-web php -l "$CTR_THEME/functions.php"
+
+            if docker exec shop-woo-web test -f /usr/local/bin/wp; then
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp plugin is-active revolut-gateway-for-woocommerce --allow-root || \
+                docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp plugin install revolut-gateway-for-woocommerce --activate --allow-root
+
+              # Sync Keycloak SSO & RasaApi settings from .env into WordPress options
+              if [ -f .env ]; then
+                KC_ENABLED=$(grep -E '^RASA_KEYCLOAK_ENABLED=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "1")
+                KC_URL=$(grep -E '^RASA_KEYCLOAK_URL=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+                KC_REALM=$(grep -E '^RASA_KEYCLOAK_REALM=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "rasa")
+                KC_CLIENT_ID=$(grep -E '^RASA_KEYCLOAK_CLIENT_ID=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "rasa-commerce")
+                KC_CLIENT_SECRET=$(grep -E '^RASA_KEYCLOAK_CLIENT_SECRET=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+                API_BASE_URL=$(grep -E '^RASA_API_BASE_URL=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+
+                [ -n "$KC_ENABLED" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_enabled "$KC_ENABLED" --allow-root || true
+                [ -n "$KC_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_url "$KC_URL" --allow-root || true
+                [ -n "$KC_REALM" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_realm "$KC_REALM" --allow-root || true
+                [ -n "$KC_CLIENT_ID" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_id "$KC_CLIENT_ID" --allow-root || true
+                [ -n "$KC_CLIENT_SECRET" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_secret "$KC_CLIENT_SECRET" --allow-root || true
+                [ -n "$API_BASE_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_api_base_url "$API_BASE_URL" --allow-root || true
+              fi
+
+              # Flush WordPress & W3 Total Cache so newly deployed theme CSS/JS take effect immediately
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp cache flush --allow-root 2>/dev/null || true
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp w3-total-cache flush --allow-root 2>/dev/null || true
+            fi
+            rm -rf "$WP_MOUNT/wp-content/cache/minify/"* "$WP_MOUNT/wp-content/cache/page_enhanced/"* 2>/dev/null || true
+
+            docker exec shop-woo-web mkdir -p /var/www/html/wp-content/uploads/wc-logs
+            docker exec shop-woo-web chown -R www-data:www-data /var/www/html/wp-content/uploads /var/www/html/wp-content/plugins
+            docker exec shop-woo-web chmod -R u+rwX /var/www/html/wp-content/uploads/wc-logs
+
+            if docker ps --format '{{.Names}}' | grep -q '^shop-woo-nginx$'; then
+              if ! docker exec shop-woo-nginx cat /etc/nginx/conf.d/default.conf | diff -q conf/nginx/shop-woo.conf - >/dev/null 2>&1; then
+                docker compose up -d --no-deps --force-recreate shop-woo-nginx 2>/dev/null || docker restart shop-woo-nginx
+              fi
+              docker exec shop-woo-nginx nginx -t && docker exec shop-woo-nginx nginx -s reload
+            fi
+
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://shop-dev.rasakopi.coffee/)
+            echo "Dev healthcheck HTTP: $HTTP_CODE"
+            [ "$HTTP_CODE" = "200" ]
+
+  deploy-prod:
+    name: Deploy to Prod (shop.rasakopi.coffee)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Pull & sync theme on Prod VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            APP_DIR="${{ secrets.PROD_APP_DIR || '/var/www/RASA/wordpress-woo' }}"
+            WP_MOUNT=$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/var/www/html"}}{{.Source}}{{end}}{{end}}' shop-woo-web)
+            VOL_THEME="$WP_MOUNT/wp-content/themes/rasa-kopi"
+            CTR_THEME="/var/www/html/wp-content/themes/rasa-kopi"
+
+            cd "$APP_DIR"
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+
+            mkdir -p "$VOL_THEME"
+            rsync -a --delete theme/rasa-kopi/ "$VOL_THEME/"
+
+            docker exec shop-woo-web chown -R www-data:www-data "$CTR_THEME"
+            docker exec shop-woo-web find "$CTR_THEME" -type f -exec chmod 644 {} +
+            docker exec shop-woo-web find "$CTR_THEME" -type d -exec chmod 755 {} +
+            docker exec shop-woo-web php -l "$CTR_THEME/functions.php"
+
+            if docker exec shop-woo-web test -f /usr/local/bin/wp; then
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp plugin is-active revolut-gateway-for-woocommerce --allow-root || \
+                docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp plugin install revolut-gateway-for-woocommerce --activate --allow-root
+
+              # Sync Keycloak SSO & RasaApi settings from .env into WordPress options
+              if [ -f .env ]; then
+                KC_ENABLED=$(grep -E '^RASA_KEYCLOAK_ENABLED=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "1")
+                KC_URL=$(grep -E '^RASA_KEYCLOAK_URL=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+                KC_REALM=$(grep -E '^RASA_KEYCLOAK_REALM=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "rasa")
+                KC_CLIENT_ID=$(grep -E '^RASA_KEYCLOAK_CLIENT_ID=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "rasa-commerce")
+                KC_CLIENT_SECRET=$(grep -E '^RASA_KEYCLOAK_CLIENT_SECRET=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+                API_BASE_URL=$(grep -E '^RASA_API_BASE_URL=' .env | cut -d '=' -f2- | tr -d '"\r' || echo "")
+
+                [ -n "$KC_ENABLED" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_enabled "$KC_ENABLED" --allow-root || true
+                [ -n "$KC_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_url "$KC_URL" --allow-root || true
+                [ -n "$KC_REALM" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_realm "$KC_REALM" --allow-root || true
+                [ -n "$KC_CLIENT_ID" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_id "$KC_CLIENT_ID" --allow-root || true
+                [ -n "$KC_CLIENT_SECRET" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_keycloak_client_secret "$KC_CLIENT_SECRET" --allow-root || true
+                [ -n "$API_BASE_URL" ] && docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp option update rasa_api_base_url "$API_BASE_URL" --allow-root || true
+              fi
+
+              # Flush WordPress & W3 Total Cache so newly deployed theme CSS/JS take effect immediately
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp cache flush --allow-root 2>/dev/null || true
+              docker exec shop-woo-web php -d open_basedir= /usr/local/bin/wp w3-total-cache flush --allow-root 2>/dev/null || true
+            fi
+            rm -rf "$WP_MOUNT/wp-content/cache/minify/"* "$WP_MOUNT/wp-content/cache/page_enhanced/"* 2>/dev/null || true
+
+            docker exec shop-woo-web mkdir -p /var/www/html/wp-content/uploads/wc-logs
+            docker exec shop-woo-web chown -R www-data:www-data /var/www/html/wp-content/uploads /var/www/html/wp-content/plugins
+            docker exec shop-woo-web chmod -R u+rwX /var/www/html/wp-content/uploads/wc-logs
+
+            if docker ps --format '{{.Names}}' | grep -q '^shop-woo-nginx$'; then
+              if ! docker exec shop-woo-nginx cat /etc/nginx/conf.d/default.conf | diff -q conf/nginx/shop-woo.conf - >/dev/null 2>&1; then
+                docker compose up -d --no-deps --force-recreate shop-woo-nginx 2>/dev/null || docker restart shop-woo-nginx
+              fi
+              docker exec shop-woo-nginx nginx -t && docker exec shop-woo-nginx nginx -s reload
+            fi
+

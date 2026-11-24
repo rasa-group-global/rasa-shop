@@ -33,9 +33,9 @@ function rasa_icon_raw( $name ) {
 function rasa_announcements() {
 	// Persis live shop.rasakopi.coffee (rasa-marquee, 3 pesan)
 	$items = array(
-		array( 'text' => 'Kostenloser Versand ab 59 € in Deutschland', 'link' => home_url( '/versand-zahlung/' ) ),
-		array( 'text' => 'Lieferung in 3–7 Werktagen', 'link' => home_url( '/versand-zahlung/' ) ),
-		array( 'text' => 'Sicher bezahlen mit PayPal, Klarna, Apple Pay & Google Pay', 'link' => '' ),
+		array( 'text' => rasa_tr( 'Kostenloser Versand ab 59 € in Deutschland', 'Free shipping over €59 in Germany' ), 'link' => home_url( '/versand-zahlung/' ) ),
+		array( 'text' => rasa_tr( 'Lieferung in 3–7 Werktagen', 'Delivery in 3–7 business days' ), 'link' => home_url( '/versand-zahlung/' ) ),
+		array( 'text' => rasa_tr( 'Sicher bezahlen mit Visa, Mastercard, PayPal, Apple Pay & Google Pay', 'Secure payment with Visa, Mastercard, PayPal, Apple Pay & Google Pay' ), 'link' => '' ),
 	);
 	// override dari customizer
 	$custom = get_theme_mod( 'rasa_announcements', array() );
@@ -51,35 +51,38 @@ function rasa_price_html( $product, $args = array() ) {
 	$show_compare  = ! empty( $args['show_compare_at_price'] );
 	$on_sale       = $product->is_on_sale();
 
-	// wc_price() sudah render simbol (mis. "29,00 €") — jangan tambah kode "EUR" lagi (live site = simbol saja)
+	// Format harga German: "79,00 €"
 	$fmt = function ( $v ) {
-		return wc_price( (float) $v );
+		return '<span class="woocommerce-Price-amount amount"><bdi>' . number_format( (float) $v, 2, ',', '.' ) . '&nbsp;&euro;</bdi></span>';
 	};
 
 	// Variable product: parent price kosong — pakai "Von" (min variation price), persis Dawn
 	// NOTE: num_variations() tidak ada di Woo 11.x — pakai get_children()
+	// $for_display = true obeys incl/excl VAT display (B2C incl vs B2B net).
 	$price_html = '';
 	if ( $product->is_type( 'variable' ) && count( $product->get_children() ) > 0 ) {
-		$min = (float) $product->get_variation_price( 'min' );
-		$max = (float) $product->get_variation_price( 'max' );
+		$min = (float) $product->get_variation_price( 'min', true );
+		$max = (float) $product->get_variation_price( 'max', true );
 		if ( $min > 0 && $min === $max ) {
 			$price_html = $fmt( $min );
 		} elseif ( $min > 0 ) {
-			$price_html = 'Von ' . $fmt( $min );
+			$price_html = esc_html( rasa_tr( 'Von ', 'From ' ) ) . $fmt( $min );
 		} else {
 			$price_html = '';
 		}
 	} else {
-		$regular = (float) $product->get_regular_price();
-		$sale    = $product->get_sale_price() !== '' ? (float) $product->get_sale_price() : 0;
-		$price   = $sale > 0 ? $sale : $regular;
+		$regular_raw = $product->get_regular_price();
+		$sale_raw    = $product->get_sale_price();
+		$regular     = '' !== $regular_raw ? (float) wc_get_price_to_display( $product, array( 'price' => (float) $regular_raw ) ) : 0.0;
+		$sale        = '' !== $sale_raw ? (float) wc_get_price_to_display( $product, array( 'price' => (float) $sale_raw ) ) : 0.0;
+		$price       = $sale > 0 ? $sale : $regular;
 		if ( $on_sale && $show_compare ) {
-			$price_html = '<span class="visually-hidden visually-hidden--inline">Normaler Preis</span>'
+			$price_html = '<span class="visually-hidden visually-hidden--inline">' . esc_html( rasa_tr( 'Normaler Preis', 'Regular price' ) ) . '</span>'
 				. '<span><s class="price-item price-item--regular">' . wp_kses_post( $fmt( $regular ) ) . '</s></span>'
-				. '<span class="visually-hidden visually-hidden--inline">Verkaufspreis</span>'
+				. '<span class="visually-hidden visually-hidden--inline">' . esc_html( rasa_tr( 'Verkaufspreis', 'Sale price' ) ) . '</span>'
 				. '<span class="price-item price-item--sale price-item--last">' . wp_kses_post( $fmt( $sale ) ) . '</span>';
 		} else {
-			$price_html = '<span class="visually-hidden visually-hidden--inline">Normaler Preis</span>'
+			$price_html = '<span class="visually-hidden visually-hidden--inline">' . esc_html( rasa_tr( 'Normaler Preis', 'Regular price' ) ) . '</span>'
 				. '<span class="price-item price-item--regular price-item--last">' . wp_kses_post( $fmt( $price ) ) . '</span>';
 		}
 	}
@@ -91,7 +94,6 @@ function rasa_price_html( $product, $args = array() ) {
 	<div class="price">
 		<div class="price__container">
 			<div class="price__regular">
-				<span class="visually-hidden visually-hidden--inline">Normaler Preis</span>
 				<span class="price-item price-item--regular">
 					<?php echo wp_kses_post( $price_html ); ?>
 				</span>
@@ -142,32 +144,21 @@ function rasa_product_card( $product, $args = array() ) {
 	/**
 	 * Helper: srcset + src untuk 1 attachment id.
 	 */
-	$srcset_for = function ( $img_id ) use ( $sizes ) {
-		if ( empty( $img_id ) ) return array( 'srcset' => '', 'src' => '', 'alt' => '', 'w' => 1300, 'h' => 1600 );
-		$parts = array();
-		$widths = array( 165, 360, 533, 720, 940, 1066 );
-		// [0]=url [1]=w [2]=h [3]=is_intermediate
+	$srcset_for = function ( $img_id ) {
+		if ( empty( $img_id ) ) return array( 'srcset' => '', 'src' => '', 'alt' => '', 'w' => 600, 'h' => 738 );
+		$card = wp_get_attachment_image_src( $img_id, 'rasa-card' );
 		$full = wp_get_attachment_image_src( $img_id, 'full' );
-		$full_w = $full ? (int) $full[1] : 0;
-		$full_h = $full ? (int) $full[2] : 0;
-		foreach ( $widths as $wd ) {
-			$srcs = wp_get_attachment_image_src( $img_id, $wd );
-			// hanya pakai ukuran yang memang lebih lebar dari target (jangan upscale)
-			if ( $srcs && (int) $srcs[1] >= $wd ) {
-				$parts[] = $srcs[0] . ' ' . (int) $srcs[1] . 'w';
-			}
+		$primary = $card ?: $full;
+		$srcset = wp_get_attachment_image_srcset( $img_id, 'rasa-card' );
+		if ( ! $srcset && $primary ) {
+			$srcset = $primary[0] . ' ' . (int) $primary[1] . 'w';
 		}
-		if ( $full ) {
-			$parts[] = $full[0] . ' ' . $full_w . 'w';
-		}
-		$src = wp_get_attachment_image_src( $img_id, 533 );
-		if ( ! $src ) $src = $full ?: array( '', 0, 0 );
 		return array(
-			'srcset' => implode( ',', $parts ),
-			'src'    => $src[0],
+			'srcset' => (string) $srcset,
+			'src'    => $primary ? $primary[0] : '',
 			'alt'    => trim( (string) wp_get_attachment_caption( $img_id ) ) ?: get_post_meta( $img_id, '_wp_attachment_image_alt', true ),
-			'w'      => $full_w ?: 1300,
-			'h'      => $full_h ?: 1600,
+			'w'      => $primary ? (int) $primary[1] : 600,
+			'h'      => $primary ? (int) $primary[2] : 738,
 		);
 	};
 
@@ -209,9 +200,10 @@ function rasa_product_card( $product, $args = array() ) {
 	echo '<a href="' . esc_url( $url ) . '" class="full-unstyled-link">' . esc_html( $title ) . '</a>';
 	echo '</h3></div>';
 	echo '<div class="card__badge bottom left"></div>';
-	echo '</div>';
+	echo '</div>'; // .card__content #1
+	echo '</div>'; // .card__inner
 
-	// card__content #2 (heading + info + price)
+	// card__content #2 (heading + info + price — sibling dari .card__inner)
 	echo '<div class="card__content">';
 	echo '<div class="card__information">';
 	echo '<h3 class="card__heading h5">';
@@ -221,9 +213,10 @@ function rasa_product_card( $product, $args = array() ) {
 	echo rasa_price_html( $product, array( 'show_compare_at_price' => true ) );
 	echo '</div></div>';
 	echo '<div class="card__badge bottom left"></div>';
-	echo '</div>';
+	echo '</div>'; // .card__content #2
 
-	echo '</div></div>';
+	echo '</div></div>'; // .card + .card-wrapper
+	return ob_get_clean();
 }
 
 /* ------------------------------------------------------------------ *
@@ -242,12 +235,13 @@ function rasa_featured_collection( $args = array() ) {
 		'padding_top'       => 44,
 		'padding_bottom'    => 36,
 		'color_scheme'      => 'scheme-2',
+		'order'             => 'DESC',
 	) );
 
 	if ( ! $a['collection'] ) return;
 	$cat = get_term_by( 'slug', $a['collection'], 'product_cat' );
 	$cat_id = $cat ? $cat->term_id : 0;
-	$products = $cat_id ? rasa_get_products_by_cat( $cat_id, $a['products_to_show'] ) : array();
+	$products = $cat_id ? rasa_get_products_by_cat( $cat_id, $a['products_to_show'], $a['order'] ) : array();
 
 	ob_start();
 	?>
@@ -266,7 +260,7 @@ function rasa_featured_collection( $args = array() ) {
 				}
 			</style>
 			<div class="collection__title title-wrapper title-wrapper--no-top-margin page-width">
-				<div class="collection__title-text">
+				<div class="collection__title-text scroll-trigger animate--slide-in">
 					<h2 class="title inline-richtext h2"><?php echo wp_kses_post( $a['title'] ); ?></h2>
 				</div>
 				<?php if ( $a['show_view_all'] && $cat_id > 0 ) : ?>
@@ -281,14 +275,14 @@ function rasa_featured_collection( $args = array() ) {
 			<div class="page-width-desktop">
 				<div class="grid product-grid contains-card contains-card--product grid--<?php echo (int) $a['columns_desktop']; ?>-col-desktop grid--<?php echo (int) $a['columns_mobile']; ?>-col-tablet-down">
 					<?php if ( $products ) : ?>
-						<?php foreach ( $products as $p ) : ?>
-							<div class="grid__item">
+						<?php foreach ( $products as $idx => $p ) : ?>
+							<div class="grid__item scroll-trigger animate--slide-in" data-cascade style="--animation-order: <?php echo (int) ( $idx + 1 ); ?>;">
 								<?php echo rasa_product_card( $p, array( 'section_id' => $a['section_id'] ) ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 							</div>
 						<?php endforeach; ?>
 					<?php else : ?>
 						<?php for ( $i = 0; $i < $a['products_to_show']; $i++ ) : ?>
-							<div class="grid__item">
+							<div class="grid__item scroll-trigger animate--slide-in" data-cascade style="--animation-order: <?php echo (int) ( $i + 1 ); ?>;">
 								<?php echo rasa_product_card_placeholder(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 							</div>
 						<?php endfor; ?>
@@ -323,13 +317,13 @@ function rasa_product_card_placeholder() {
 					</div>
 					<div class="card__badge bottom left"></div>
 				</div>
-				<div class="card__content">
-					<div class="card__information">
-						<h3 class="card__heading h5"><a class="full-unstyled-link" href="#">Bald im Shop</a></h3>
-						<div class="card-information"><span class="caption-large light"></span></div>
-					</div>
-					<div class="card__badge bottom left"></div>
+			</div>
+			<div class="card__content">
+				<div class="card__information">
+					<h3 class="card__heading h5"><a class="full-unstyled-link" href="#">Bald im Shop</a></h3>
+					<div class="card-information"><span class="caption-large light"></span></div>
 				</div>
+				<div class="card__badge bottom left"></div>
 			</div>
 		</div>
 	</div>
@@ -341,7 +335,7 @@ function rasa_product_card_placeholder() {
  * Ambil produk dari category (limit). $cat bisa slug atau term_id.
  * NOTE: wc_get_products 'category' param = SLUG (bukan term_id).
  */
-function rasa_get_products_by_cat( $cat, $limit = 4 ) {
+function rasa_get_products_by_cat( $cat, $limit = 4, $order = 'DESC' ) {
 	if ( ! function_exists( 'WC' ) ) return array();
 	$slug = is_numeric( $cat ) ? get_term_field( 'slug', (int) $cat, 'product_cat' ) : $cat;
 	$loop = wc_get_products( array(
@@ -349,7 +343,7 @@ function rasa_get_products_by_cat( $cat, $limit = 4 ) {
 		'status'    => 'publish',
 		'limit'     => (int) $limit,
 		'orderby'   => 'date',
-		'order'     => 'DESC',
+		'order'     => strtoupper( $order ) === 'ASC' ? 'ASC' : 'DESC',
 		'return'    => 'objects',
 	) );
 	return is_array( $loop ) ? $loop : array();
@@ -361,7 +355,9 @@ function rasa_get_products_by_cat( $cat, $limit = 4 ) {
  * ------------------------------------------------------------------ */
 function rasa_free_shipping_bar( $cart_total = null, $country = 'DE' ) {
 	if ( null === $cart_total && function_exists( 'WC' ) && WC()->cart ) {
-		$cart_total = (float) WC()->cart->get_subtotal_excluding_tax();
+		$cart_total = WC()->cart->display_prices_including_tax()
+			? ( (float) WC()->cart->get_subtotal() + (float) WC()->cart->get_subtotal_tax() )
+			: (float) WC()->cart->get_subtotal();
 	}
 	if ( $cart_total <= 0 ) return;
 	$threshold = ( $country === 'AT' ) ? 89.0 : 59.0;
@@ -410,9 +406,9 @@ function rasa_main_menu_items() {
 	}
 	// Fallback: menu live Shopify
 	return array(
-		array( 'title' => 'Startseite', 'url' => home_url( '/' ), 'children' => array(), 'current' => is_front_page() ),
-		array( 'title' => 'Produkte',   'url' => home_url( '/shop/' ), 'children' => array(), 'current' => function_exists( 'is_shop' ) && is_shop() || is_product() || is_product_category() ),
-		array( 'title' => 'Kontakt',    'url' => home_url( '/kontakt/' ), 'children' => array(), 'current' => is_page( 'kontakt' ) ),
+		array( 'title' => rasa_tr( 'Startseite', 'Home' ), 'url' => home_url( '/' ), 'children' => array(), 'current' => is_front_page() ),
+		array( 'title' => rasa_tr( 'Produkte', 'Products' ), 'url' => home_url( '/shop/' ), 'children' => array(), 'current' => function_exists( 'is_shop' ) && is_shop() || is_product() || is_product_category() ),
+		array( 'title' => rasa_tr( 'Kontakt', 'Contact' ), 'url' => home_url( '/kontakt/' ), 'children' => array(), 'current' => is_page( 'kontakt' ) ),
 		array( 'title' => 'B2B',        'url' => home_url( '/#b2b' ), 'children' => array(), 'current' => false ),
 	);
 }
@@ -447,19 +443,190 @@ function rasa_footer_menu_items( $location ) {
 	}
 	if ( $location === 'footer-rasa' ) {
 		return array(
-			array( 'title' => 'Partner-Röstereien', 'url' => home_url( '/partner-roestereien/' ) ),
+			array( 'title' => rasa_tr( 'Partner-Röstereien', 'Partner Roasteries' ), 'url' => home_url( '/partner-roestereien/' ) ),
 			array( 'title' => 'B2B', 'url' => home_url( '/#b2b' ) ),
 		);
 	}
 	// footer-legal fallback (menu live)
 	return array(
-		array( 'title' => 'Impressum', 'url' => home_url( '/impressum/' ) ),
-		array( 'title' => 'AGB', 'url' => home_url( '/agb/' ) ),
-		array( 'title' => 'Widerrufsbelehrung', 'url' => home_url( '/widerrufsbelehrung/' ) ),
-		array( 'title' => 'Datenschutz', 'url' => home_url( '/datenschutz/' ) ),
-		array( 'title' => 'Versand & Zahlung', 'url' => home_url( '/versand-zahlung/' ) ),
-		array( 'title' => 'Kontakt', 'url' => home_url( '/kontakt/' ) ),
+		array( 'title' => rasa_tr( 'Impressum', 'Imprint' ), 'url' => home_url( '/impressum/' ) ),
+		array( 'title' => rasa_tr( 'AGB', 'Terms & Conditions' ), 'url' => home_url( '/agb/' ) ),
+		array( 'title' => rasa_tr( 'Widerrufsbelehrung', 'Cancellation Policy' ), 'url' => home_url( '/widerrufsbelehrung/' ) ),
+		array( 'title' => rasa_tr( 'Datenschutz', 'Privacy Policy' ), 'url' => home_url( '/datenschutz/' ) ),
+		array( 'title' => rasa_tr( 'Versand & Zahlung', 'Shipping & Payment' ), 'url' => home_url( '/versand-zahlung/' ) ),
+		array( 'title' => rasa_tr( 'Kontakt', 'Contact' ), 'url' => home_url( '/kontakt/' ) ),
 		array( 'title' => 'FAQ', 'url' => home_url( '/faq/' ) ),
-		array( 'title' => 'Cookie-Einstellungen', 'url' => '#cookie-einstellungen' ),
+		array( 'title' => rasa_tr( 'Cookie-Einstellungen', 'Cookie Settings' ), 'url' => '#cookie-einstellungen' ),
 	);
+}
+
+/**
+ * Render Header Account Popover Modal (Shop.rasakopi.coffee parity).
+ * Supports both unauthenticated (sign in / create account) and logged-in (account summary) states.
+ */
+function rasa_render_header_account_popover() {
+	$is_logged_in = is_user_logged_in();
+	$current_user = $is_logged_in ? wp_get_current_user() : null;
+
+	$sso_url = function_exists( 'rasa_sso_login_url' )
+		? rasa_sso_login_url()
+		: ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' ) );
+	$myaccount_url = function_exists( 'wc_get_page_permalink' )
+		? wc_get_page_permalink( 'myaccount' )
+		: home_url( '/my-account/' );
+	$orders_url = function_exists( 'wc_get_endpoint_url' )
+		? wc_get_endpoint_url( 'orders', '', $myaccount_url )
+		: home_url( '/my-account/orders/' );
+	$profile_url = function_exists( 'wc_get_endpoint_url' )
+		? wc_get_endpoint_url( 'edit-account', '', $myaccount_url )
+		: home_url( '/my-account/edit-account/' );
+
+	$close_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Schließen', 'Close' )
+		: 'Close';
+
+	if ( $is_logged_in && $current_user ) {
+		$account_title = function_exists( 'rasa_tr' )
+			? rasa_tr( 'Konto', 'Account' )
+			: 'Account';
+		$orders_label = function_exists( 'rasa_tr' )
+			? rasa_tr( 'Bestellungen', 'Orders' )
+			: 'Orders';
+		$profile_label = function_exists( 'rasa_tr' )
+			? rasa_tr( 'Profil', 'Profile' )
+			: 'Profile';
+		$logout_label = function_exists( 'rasa_tr' )
+			? rasa_tr( 'Abmelden', 'Sign out' )
+			: 'Sign out';
+		?>
+		<div id="HeaderAccountPopover" class="rasa-account-popover rasa-account-popover--logged-in" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( $account_title ); ?>" hidden style="display:none;position:absolute;top:calc(100% + 12px);right:0;width:320px;max-width:calc(100vw - 32px);background:#ffffff;border:1px solid rgba(18,18,18,0.12);border-radius:8px;box-shadow:0 16px 36px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.06);padding:22px 20px 18px;z-index:1000;box-sizing:border-box;text-align:left;color:#121212;">
+			<div class="rasa-account-popover__header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+				<h3 class="rasa-account-popover__title" style="margin:0;font-size:1.6rem;font-weight:600;color:#121212;line-height:1.3;letter-spacing:-0.01em;"><?php echo esc_html( $account_title ); ?></h3>
+				<button type="button" class="rasa-account-popover__close" aria-label="<?php echo esc_attr( $close_label ); ?>" id="HeaderAccountClose" style="background:transparent;border:none;padding:6px;margin:-6px;cursor:pointer;color:rgba(18,18,18,0.55);display:flex;align-items:center;justify-content:center;border-radius:4px;">
+					<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<line x1="1" y1="1" x2="13" y2="13"></line>
+						<line x1="13" y1="1" x2="1" y2="13"></line>
+					</svg>
+				</button>
+			</div>
+
+			<div class="rasa-account-popover__body">
+				<div class="rasa-account-popover__email" style="font-size:1.35rem;color:rgba(18,18,18,0.65);margin:-6px 0 16px 0;word-break:break-all;">
+					<?php echo esc_html( $current_user->user_email ); ?>
+				</div>
+
+				<div class="rasa-account-popover__grid-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+					<a href="<?php echo esc_url( $orders_url ); ?>" class="rasa-account-popover__action-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;background:#ffffff;border:1px solid rgba(18,18,18,0.15);border-radius:6px;font-size:1.35rem;font-weight:500;color:#121212 !important;text-decoration:none !important;box-sizing:border-box;">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+							<line x1="3" y1="6" x2="21" y2="6"></line>
+							<path d="M16 10a4 4 0 0 1-8 0"></path>
+						</svg>
+						<span><?php echo esc_html( $orders_label ); ?></span>
+					</a>
+					<a href="<?php echo esc_url( $profile_url ); ?>" class="rasa-account-popover__action-btn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;background:#ffffff;border:1px solid rgba(18,18,18,0.15);border-radius:6px;font-size:1.35rem;font-weight:500;color:#121212 !important;text-decoration:none !important;box-sizing:border-box;">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+							<circle cx="12" cy="7" r="4"></circle>
+						</svg>
+						<span><?php echo esc_html( $profile_label ); ?></span>
+					</a>
+				</div>
+
+				<div class="rasa-account-popover__signout-wrap" style="margin-top:14px;text-align:center;border-top:1px solid rgba(18,18,18,0.08);padding-top:12px;">
+					<a href="<?php echo esc_url( wp_logout_url( home_url( '/' ) ) ); ?>" class="rasa-account-popover__signout-link" style="font-size:1.25rem;color:rgba(18,18,18,0.6);text-decoration:none !important;">
+						<?php echo esc_html( $logout_label ); ?>
+					</a>
+				</div>
+			</div>
+		</div>
+		<?php
+		return;
+	}
+
+	$title = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Anmelden oder Konto erstellen', 'Sign in or create account' )
+		: 'Sign in or create account';
+	$btn_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Mit Rasa Account anmelden', 'Sign in with Rasa Account' )
+		: 'Sign in with Rasa Account';
+	$or_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'ODER', 'OR' )
+		: 'OR';
+	$email_placeholder = function_exists( 'rasa_tr' )
+		? rasa_tr( 'E-Mail', 'Email' )
+		: 'Email';
+	$consent_text = function_exists( 'rasa_tr' )
+		? rasa_tr(
+			'Ja, ich möchte Neuigkeiten, Angebote und Erinnerungen zu meinem Warenkorb per E-Mail erhalten. Du kannst dich jederzeit abmelden.',
+			'Yes, I would like to receive news, offers and reminders about my shopping cart by email. You can unsubscribe at any time.'
+		)
+		: 'Yes, I would like to receive news, offers and reminders about my shopping cart by email. You can unsubscribe at any time.';
+	$orders_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Bestellungen', 'Orders' )
+		: 'Orders';
+	$profile_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Profil', 'Profile' )
+		: 'Profile';
+	$close_label = function_exists( 'rasa_tr' )
+		? rasa_tr( 'Schließen', 'Close' )
+		: 'Close';
+	?>
+	<div id="HeaderAccountPopover" class="rasa-account-popover" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr( $title ); ?>" hidden style="display:none;position:absolute;top:calc(100% + 12px);right:0;width:360px;max-width:calc(100vw - 32px);background:#ffffff;border:1px solid rgba(18,18,18,0.12);border-radius:8px;box-shadow:0 16px 36px rgba(0,0,0,0.12),0 4px 12px rgba(0,0,0,0.06);padding:24px 22px;z-index:1000;box-sizing:border-box;text-align:left;color:#121212;">
+		<div class="rasa-account-popover__header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+			<h3 class="rasa-account-popover__title" style="margin:0;font-size:1.6rem;font-weight:600;color:#121212;line-height:1.3;letter-spacing:-0.01em;"><?php echo esc_html( $title ); ?></h3>
+			<button type="button" class="rasa-account-popover__close" aria-label="<?php echo esc_attr( $close_label ); ?>" id="HeaderAccountClose" style="background:transparent;border:none;padding:6px;margin:-6px;cursor:pointer;color:rgba(18,18,18,0.55);display:flex;align-items:center;justify-content:center;border-radius:4px;">
+				<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<line x1="1" y1="1" x2="13" y2="13"></line>
+					<line x1="13" y1="1" x2="1" y2="13"></line>
+				</svg>
+			</button>
+		</div>
+
+		<div class="rasa-account-popover__body">
+			<a href="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__sso-btn" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;background:#121212;color:#ffffff !important;border:1px solid #121212;border-radius:6px;font-weight:600;font-size:1.45rem;text-align:center;text-decoration:none !important;box-sizing:border-box;box-shadow:0 2px 6px rgba(0,0,0,0.15);transition:background-color 0.2s ease, transform 0.15s ease;">
+				<span><?php echo esc_html( $btn_label ); ?></span>
+			</a>
+
+			<div class="rasa-account-popover__divider" style="display:flex;align-items:center;gap:12px;margin:18px 0;color:rgba(18,18,18,0.45);font-size:1.15rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
+				<span><?php echo esc_html( $or_label ); ?></span>
+			</div>
+
+			<form method="get" action="<?php echo esc_url( $sso_url ); ?>" class="rasa-account-popover__email-form">
+				<div class="rasa-account-popover__input-wrap" style="position:relative;width:100%;">
+					<input type="email" name="login_hint" class="rasa-account-popover__input" placeholder="<?php echo esc_attr( $email_placeholder ); ?>" required autocomplete="email" style="width:100%;height:48px;padding:0 44px 0 16px;border:1px solid rgba(18,18,18,0.2);border-radius:6px;font-size:1.4rem;color:#121212;background:#ffffff;box-sizing:border-box;" />
+					<button type="submit" class="rasa-account-popover__submit-btn" aria-label="Submit" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:4px;color:rgba(18,18,18,0.6);cursor:pointer;padding:0;">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<line x1="5" y1="12" x2="19" y2="12"></line>
+							<polyline points="12 5 19 12 12 19"></polyline>
+						</svg>
+					</button>
+				</div>
+
+				<label class="rasa-account-popover__consent" style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;font-size:1.2rem;line-height:1.45;color:rgba(18,18,18,0.65);cursor:pointer;">
+					<input type="checkbox" name="marketing_opt_in" value="1" style="margin-top:2px;flex-shrink:0;accent-color:#121212;" />
+					<span><?php echo esc_html( $consent_text ); ?></span>
+				</label>
+			</form>
+
+			<div class="rasa-account-popover__footer" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid rgba(18,18,18,0.1);">
+				<a href="<?php echo esc_url( $orders_url ); ?>" class="rasa-account-popover__footer-link" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:#f9fafb;border:1px solid rgba(18,18,18,0.12);border-radius:6px;font-size:1.3rem;font-weight:500;color:#121212 !important;text-decoration:none !important;">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+						<line x1="3" y1="6" x2="21" y2="6"></line>
+						<path d="M16 10a4 4 0 0 1-8 0"></path>
+					</svg>
+					<span><?php echo esc_html( $orders_label ); ?></span>
+				</a>
+				<a href="<?php echo esc_url( $profile_url ); ?>" class="rasa-account-popover__footer-link" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;background:#f9fafb;border:1px solid rgba(18,18,18,0.12);border-radius:6px;font-size:1.3rem;font-weight:500;color:#121212 !important;text-decoration:none !important;">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+						<circle cx="12" cy="7" r="4"></circle>
+					</svg>
+					<span><?php echo esc_html( $profile_label ); ?></span>
+				</a>
+			</div>
+		</div>
+	</div>
+	<?php
 }

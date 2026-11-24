@@ -20,6 +20,11 @@ if (!customElements.get('localization-form')) {
         this.addEventListener('keydown', this.onContainerKeyDown.bind(this));
         this.addEventListener('focusout', this.closeSelector.bind(this));
         this.elements.button.addEventListener('click', this.openSelector.bind(this));
+        document.addEventListener('click', (event) => {
+          if (!this.contains(event.target) && this.elements.panel && !this.elements.panel.hasAttribute('hidden')) {
+            this.hidePanel();
+          }
+        });
 
         if (this.elements.search) {
           this.elements.search.addEventListener('keyup', this.filterCountries.bind(this));
@@ -104,10 +109,19 @@ if (!customElements.get('localization-form')) {
       }
 
       onItemClick(event) {
-        event.preventDefault();
+        const a = event.currentTarget;
+        const val = a.dataset.value || a.getAttribute('data-rasa-lang') || 'de';
+        document.cookie = "rasa_lang=" + val + "; path=/; max-age=" + (30 * 86400) + "; SameSite=Lax";
+        if (this.elements.input) {
+          this.elements.input.value = val;
+        }
         const form = this.querySelector('form');
-        this.elements.input.value = event.currentTarget.dataset.value;
-        if (form) form.submit();
+        if (form && typeof form.submit === 'function') {
+          event.preventDefault();
+          form.submit();
+        } else if (a.href && a.href !== '#' && a.href.indexOf('javascript:') === -1) {
+          return;
+        }
       }
 
       openSelector() {
@@ -133,8 +147,7 @@ if (!customElements.get('localization-form')) {
       closeSelector(event) {
         if (
           event.target.classList.contains('country-selector__overlay') ||
-          !this.contains(event.target) ||
-          !this.contains(event.relatedTarget)
+          (event.relatedTarget && !this.contains(event.relatedTarget))
         ) {
           this.hidePanel();
         }

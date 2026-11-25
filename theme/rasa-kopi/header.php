@@ -169,7 +169,7 @@ if ( $is_logged_in && $current_user ) {
 <!-- ===================== HEADER ===================== -->
 <div id="shopify-section-header" class="shopify-section section-header">
 <sticky-header data-sticky-type="on-scroll-up" class="header-wrapper color-scheme-2 gradient header-wrapper--border-bottom">
-	<header class="header header--middle-center header--mobile-center page-width header--has-menu header--has-account header--has-localizations">
+	<header class="header header--middle-left header--mobile-center page-width header--has-menu header--has-account header--has-localizations">
 
 		<!-- Mobile Drawer (< 990px) -->
 		<?php $cur_lang = function_exists( 'rasa_current_lang' ) ? rasa_current_lang() : 'de'; ?>

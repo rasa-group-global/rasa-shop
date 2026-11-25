@@ -35,7 +35,7 @@ function rasa_announcements() {
 	$items = array(
 		array( 'text' => rasa_tr( 'Kostenloser Versand ab 59 € in Deutschland', 'Free shipping over €59 in Germany' ), 'link' => home_url( '/versand-zahlung/' ) ),
 		array( 'text' => rasa_tr( 'Lieferung in 3–7 Werktagen', 'Delivery in 3–7 business days' ), 'link' => home_url( '/versand-zahlung/' ) ),
-		array( 'text' => rasa_tr( 'Sicher bezahlen mit Visa, Mastercard, PayPal, Apple Pay & Google Pay', 'Secure payment with Visa, Mastercard, PayPal, Apple Pay & Google Pay' ), 'link' => '' ),
+		array( 'text' => rasa_tr( 'Sicher bezahlen mit Visa, Mastercard, Apple Pay & Google Pay', 'Secure payment with Visa, Mastercard, Apple Pay & Google Pay' ), 'link' => '' ),
 	);
 	// override dari customizer
 	$custom = get_theme_mod( 'rasa_announcements', array() );

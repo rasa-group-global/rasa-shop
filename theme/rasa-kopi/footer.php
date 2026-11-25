@@ -121,7 +121,7 @@ $legal_menu  = rasa_footer_menu_items( 'footer-legal' );
 <div class="rasa-legal-bar color-scheme-2 gradient">
 	<div class="rasa-legal-bar__inner page-width">
 		<a
-			href="https://connect.haendlerbund.de/widerrufsformular/shop-rasakopi-coffee/01M4VA27MEKAAG52YF6EFSKX7K"
+			href="<?php echo esc_url( home_url( '/vertrag-widerrufen/' ) ); ?>"
 			target="_blank"
 			rel="noopener noreferrer"
 			class="rasa-legal-bar__button"

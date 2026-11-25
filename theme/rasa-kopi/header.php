@@ -22,7 +22,7 @@ if ( $is_logged_in && $current_user ) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="<?php echo esc_url( RASA_URI . '/assets/img/sections/rasa-kopi-favicon.png' ); ?>">
 <link rel="apple-touch-icon" href="<?php echo esc_url( RASA_URI . '/assets/img/sections/rasa-kopi-favicon.png' ); ?>">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
 <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>

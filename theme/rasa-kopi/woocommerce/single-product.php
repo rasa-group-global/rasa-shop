@@ -39,7 +39,7 @@ while ( have_posts() ) :
 						$anim_attr = ( 0 === $idx ) ? '' : ' data-cascade';
 						?>
 						<div class="rasa-pdp-gallery__item <?php echo esc_attr( $anim_cls ); ?>"<?php echo $anim_attr; ?> style="<?php echo esc_attr( $span ); ?>background:#efeee9;overflow:hidden;--animation-order:<?php echo (int) $idx; ?>;">
-							<a href="<?php echo esc_url( $full ); ?>" target="_blank" rel="noopener">
+							<a href="<?php echo esc_url( $full ); ?>" class="rasa-zoom" aria-label="<?php echo esc_attr( rasa_tr( 'Bild vergrößern', 'Enlarge image' ) ); ?>">
 								<img src="<?php echo esc_url( $src ); ?>" alt="<?php echo esc_attr( $alt ); ?>" style="width:100%;height:auto;display:block;object-fit:cover;" <?php echo 0 === $idx ? 'fetchpriority="high"' : 'loading="lazy"'; ?>>
 							</a>
 						</div>
@@ -128,9 +128,13 @@ while ( have_posts() ) :
 						<input type="hidden" name="product_id" value="<?php echo (int) $product->get_id(); ?>">
 						<?php endif; ?>
 						<div id="RasaPdpError" role="alert" hidden style="margin:0 0 1.2rem;padding:1rem 1.4rem;border:1px solid #c62828;background:#fff5f5;color:#b71c1c;font-size:1.3rem;line-height:1.5;"></div>
+						<?php if ( $product->is_in_stock() ) : ?>
 						<button type="submit" name="add-to-cart" value="<?php echo (int) $product->get_id(); ?>" class="product-form__submit button button--full-width button--primary" style="width:100%;min-height:4.9rem;background:#121212;color:#ffffff;font-size:1.5rem;letter-spacing:.1rem;border:0;cursor:pointer;">
 							<?php echo esc_html( rasa_tr( 'In den Warenkorb legen', 'Add to cart' ) ); ?>
 						</button>
+						<?php else : ?>
+						<button type="button" class="product-form__submit button button--full-width button--secondary" disabled aria-disabled="true" style="opacity:.6;cursor:not-allowed;"><?php echo esc_html( rasa_tr( 'Ausverkauft', 'Sold out' ) ); ?></button>
+						<?php endif; ?>
 					</form>
 
 					<!-- EU Statutory Warranty Notice -->
@@ -210,5 +214,17 @@ while ( have_posts() ) :
 <?php
 endwhile;
 
+?>
+<dialog id="RasaZoom" aria-label="Bild" style="padding:0;border:0;max-width:96vw;max-height:96vh;background:transparent;">
+	<button type="button" class="rasa-zoom__close" aria-label="Schließen" style="position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;border:0;background:#fff;font-size:24px;line-height:44px;cursor:pointer;">&times;</button>
+	<img alt="" style="display:block;max-width:96vw;max-height:96vh;width:auto;height:auto;object-fit:contain;">
+</dialog>
+<style>#RasaZoom::backdrop{background:rgba(0,0,0,.8)}.rasa-zoom{cursor:zoom-in}</style>
+<script>
+(function(){var d=document.getElementById('RasaZoom');if(!d||!d.showModal)return;var im=d.querySelector('img');
+document.addEventListener('click',function(e){var a=e.target.closest('a.rasa-zoom');if(!a)return;e.preventDefault();var i=a.querySelector('img');im.src=a.href;im.alt=i?i.alt:'';d.showModal();});
+d.addEventListener('click',function(e){if(e.target!==im)d.close();});})();
+</script>
+<?php
 get_footer();
 

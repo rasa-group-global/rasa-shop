@@ -185,18 +185,31 @@ while ( have_posts() ) :
 						<li><svg aria-hidden="true" viewBox="0 -960 960 960"><path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Z"/></svg><span><?php echo esc_html( rasa_tr( 'Versand aus Deutschland', 'Ships from Germany' ) ); ?></span></li>
 					</ul>
 
+					<!-- Product Description: intro + collapsible sections (one per <h3>) -->
+					<?php
+					$rasa_desc = apply_filters( 'the_content', get_the_content() );
+					$rasa_parts = preg_split( '/<h3[^>]*>(.*?)<\/h3>/s', $rasa_desc, -1, PREG_SPLIT_DELIM_CAPTURE );
+					$rasa_intro = trim( (string) array_shift( $rasa_parts ) );
+					?>
+					<div class="product__description rte quick-add-hidden rasa-desc">
+						<?php if ( '' !== $rasa_intro ) : ?>
+						<div class="rasa-desc__intro"><?php echo $rasa_intro; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- post content ?></div>
+						<?php endif; ?>
+						<?php for ( $rasa_i = 0; $rasa_i + 1 < count( $rasa_parts ); $rasa_i += 2 ) : ?>
+						<details class="rasa-acc"<?php echo 0 === $rasa_i ? ' open' : ''; ?>>
+							<summary><?php echo wp_kses_post( $rasa_parts[ $rasa_i ] ); ?></summary>
+							<div class="rasa-acc__body"><?php echo $rasa_parts[ $rasa_i + 1 ]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- post content ?></div>
+						</details>
+						<?php endfor; ?>
+					</div>
+
 					<!-- EU Statutory Warranty Notice -->
 					<div class="rasa-eu-notice" style="margin-top:2.4rem;padding-top:2rem;border-top:1px solid rgba(18,18,18,.12);">
 						<p style="margin:0 0 1.2rem;font-size:1.4rem;font-weight:600;color:rgba(0,0,0,0.75);"><?php echo esc_html( rasa_tr( 'Gesetzliche Gewährleistung', 'Statutory Warranty' ) ); ?></p>
 						<a href="https://europa.eu/youreurope/garantien" target="_blank" rel="noopener noreferrer" style="display:inline-block;">
-							<img src="https://cdn.shopify.com/s/files/1/0901/3388/9407/files/EU-Gewaehrleistung-Hinweis-DE.png?v=1791724559&width=640" alt="Gesetzliche Gewährleistung" style="max-width:320px;width:100%;height:auto;border:1px solid #ddd;display:block;" loading="lazy">
+							<img src="https://cdn.shopify.com/s/files/1/0901/3388/9407/files/EU-Gewaehrleistung-Hinweis-DE.png?v=1791724559&width=640" alt="Gesetzliche Gewährleistung" style="max-width:200px;width:100%;height:auto;border:1px solid #ddd;display:block;" loading="lazy">
 						</a>
 						<p style="margin:.8rem 0 0;font-size:1.3rem;color:rgba(0,0,0,0.75);"><?php echo esc_html( rasa_tr( 'Mehr zu Ihren Rechten:', 'More about your rights:' ) ); ?> <a href="https://europa.eu/youreurope/garantien" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;">europa.eu/youreurope/garantien</a></p>
-					</div>
-
-					<!-- Product Description -->
-					<div class="product__description rte quick-add-hidden" style="margin-top:2.5rem;font-size:1.6rem;line-height:2.88rem;color:rgba(0,0,0,0.75);">
-						<?php the_content(); ?>
 					</div>
 
 					<!-- Share -->
@@ -304,6 +317,16 @@ endwhile;
 
 ?>
 <style>
+.rasa-desc{margin-top:2.4rem;font-size:1.5rem;line-height:1.6;color:rgba(0,0,0,.75)}
+.rasa-desc__intro p{margin:0 0 1.6rem}
+.rasa-acc{border-top:1px solid rgba(18,18,18,.12)}
+.rasa-acc:last-of-type{border-bottom:1px solid rgba(18,18,18,.12)}
+.rasa-acc summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:1.4rem 0;font-size:1.5rem;font-weight:600;color:#121212}
+.rasa-acc summary::-webkit-details-marker{display:none}
+.rasa-acc summary::after{content:"+";font-size:2rem;font-weight:400;line-height:1}
+.rasa-acc[open] summary::after{content:"\2212"}
+.rasa-acc__body{padding:0 0 1.6rem}
+.rasa-acc__body ul,.rasa-acc__body ol{padding-left:2rem;margin:0}
 .rasa-trust{list-style:none;margin:2rem 0 0;padding:1.6rem 0 0;border-top:1px solid rgba(18,18,18,.12);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem 1.6rem}
 .rasa-trust li{display:flex;align-items:center;gap:.8rem;font-size:1.35rem;line-height:1.35;color:rgba(0,0,0,.8)}
 .rasa-trust svg{flex:0 0 2.2rem;width:2.2rem;height:2.2rem;fill:currentColor}

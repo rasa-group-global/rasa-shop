@@ -24,12 +24,51 @@ while ( have_posts() ) :
 	$default_attrs = $is_variable ? $product->get_default_attributes() : array();
 
 	$shipping_url = home_url( '/versand-zahlung/' );
+
+	// Per-variant galleries: variation image + variation meta `_rasa_gallery` (comma-separated attachment IDs).
+	// Used only when the product has one attribute and at least one variation has `_rasa_gallery`.
+	$rasa_groups   = array();
+	$rasa_var_map  = array();
+	if ( $is_variable && 1 === count( $attributes ) ) {
+		$rasa_has_gallery = false;
+		foreach ( $product->get_children() as $rasa_vid ) {
+			$rasa_v = wc_get_product( $rasa_vid );
+			if ( ! $rasa_v ) {
+				continue;
+			}
+			$rasa_attrs = $rasa_v->get_attributes();
+			$rasa_val   = strtolower( (string) reset( $rasa_attrs ) );
+			if ( '' === $rasa_val ) {
+				continue;
+			}
+			$rasa_extra = array_filter( array_map( 'absint', explode( ',', (string) $rasa_v->get_meta( '_rasa_gallery' ) ) ) );
+			if ( $rasa_extra ) {
+				$rasa_has_gallery = true;
+			}
+			$rasa_ids = array_values( array_unique( array_filter( array_merge( array( (int) $rasa_v->get_image_id() ), $rasa_extra ) ) ) );
+			$rasa_groups[ $rasa_val ]  = $rasa_ids;
+			$rasa_var_map[ $rasa_val ] = (int) $rasa_vid;
+		}
+		if ( ! $rasa_has_gallery ) {
+			$rasa_groups = array();
+		}
+	}
+	$rasa_default_val = '';
+	if ( $rasa_groups ) {
+		$rasa_first_attr  = array_key_first( $attributes );
+		$rasa_default_val = strtolower( (string) ( $default_attrs[ sanitize_title( $rasa_first_attr ) ] ?? ( $attributes[ $rasa_first_attr ][0] ?? '' ) ) );
+	}
 	?>
 	<section class="page-width section-main-product" style="padding-top: 36px; padding-bottom: 48px;">
 		<div class="product product--large product--left product--stacked grid grid--1-col grid--2-col-tablet">
 			<!-- Left Column: Stacked Gallery (65%) -->
 			<div class="grid__item product__media-wrapper" style="flex: 0 0 65%; max-width: 65%;">
-				<div class="rasa-pdp-gallery" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+				<?php
+				$rasa_gallery_sets = $rasa_groups ? $rasa_groups : array( '' => $images );
+				foreach ( $rasa_gallery_sets as $rasa_key => $images ) :
+					$rasa_hidden = $rasa_groups && $rasa_key !== $rasa_default_val;
+					?>
+				<div class="rasa-pdp-gallery"<?php echo $rasa_groups ? ' data-rasa-group="' . esc_attr( $rasa_key ) . '"' : ''; ?><?php echo $rasa_hidden ? ' hidden' : ''; ?> style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
 					<?php foreach ( $images as $idx => $img_id ) :
 						$src = wp_get_attachment_image_url( $img_id, 'large' ) ?: wp_get_attachment_image_url( $img_id, 'full' );
 						$full = wp_get_attachment_image_url( $img_id, 'full' );
@@ -45,6 +84,7 @@ while ( have_posts() ) :
 						</div>
 					<?php endforeach; ?>
 				</div>
+				<?php endforeach; ?>
 			</div>
 
 			<!-- Right Column: Sticky Product Info (35%) -->
@@ -277,15 +317,57 @@ endwhile;
 .rasa-pair__link:hover .rasa-pair__name{text-decoration:underline;text-underline-offset:.3rem}
 .rasa-pair__price{font-size:1.4rem;color:rgba(0,0,0,.75)}
 </style>
-<dialog id="RasaZoom" aria-label="Bild" style="padding:0;border:0;max-width:96vw;max-height:96vh;background:transparent;">
-	<button type="button" class="rasa-zoom__close" aria-label="Schließen" style="position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;border:0;background:#fff;font-size:24px;line-height:44px;cursor:pointer;">&times;</button>
+<dialog id="RasaZoom" aria-label="<?php echo esc_attr( rasa_tr( 'Bild', 'Image' ) ); ?>" style="padding:0;border:0;max-width:96vw;max-height:96vh;background:transparent;overflow:visible;">
 	<img alt="" style="display:block;max-width:96vw;max-height:96vh;width:auto;height:auto;object-fit:contain;">
+	<button type="button" class="rasa-zoom__btn rasa-zoom__close" aria-label="<?php echo esc_attr( rasa_tr( 'Schließen', 'Close' ) ); ?>">&times;</button>
+	<button type="button" class="rasa-zoom__btn rasa-zoom__prev" aria-label="<?php echo esc_attr( rasa_tr( 'Vorheriges Bild', 'Previous image' ) ); ?>">&#8249;</button>
+	<button type="button" class="rasa-zoom__btn rasa-zoom__next" aria-label="<?php echo esc_attr( rasa_tr( 'Nächstes Bild', 'Next image' ) ); ?>">&#8250;</button>
+	<span class="rasa-zoom__count" aria-live="polite"></span>
 </dialog>
-<style>#RasaZoom::backdrop{background:rgba(0,0,0,.8)}.rasa-zoom{cursor:zoom-in}</style>
+<style>
+#RasaZoom::backdrop{background:rgba(0,0,0,.85)}
+.rasa-pdp-gallery[hidden]{display:none!important}
+[data-rasa-group] .scroll-trigger{opacity:1!important;transform:none!important;animation:none!important}
+.rasa-zoom{cursor:zoom-in}
+.rasa-zoom__btn{position:absolute;width:48px;height:48px;border-radius:50%;border:0;background:#fff;color:#000;font-size:30px;line-height:46px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.rasa-zoom__close{top:8px;right:8px;font-size:26px}
+.rasa-zoom__prev{left:8px;top:50%;transform:translateY(-50%)}
+.rasa-zoom__next{right:8px;top:50%;transform:translateY(-50%)}
+.rasa-zoom__count{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:1.3rem;padding:.3rem 1rem;border-radius:2rem}
+.rasa-zoom__btn[hidden],.rasa-zoom__count:empty{display:none}
+</style>
 <script>
-(function(){var d=document.getElementById('RasaZoom');if(!d||!d.showModal)return;var im=d.querySelector('img');
-document.addEventListener('click',function(e){var a=e.target.closest('a.rasa-zoom');if(!a)return;e.preventDefault();var i=a.querySelector('img');im.src=a.href;im.alt=i?i.alt:'';d.showModal();});
-d.addEventListener('click',function(e){if(e.target!==im)d.close();});})();
+(function(){
+	var d=document.getElementById('RasaZoom');if(!d||!d.showModal)return;
+	var im=d.querySelector('img'),prev=d.querySelector('.rasa-zoom__prev'),next=d.querySelector('.rasa-zoom__next'),cnt=d.querySelector('.rasa-zoom__count');
+	var list=[],pos=0;
+	function visible(){return Array.prototype.filter.call(document.querySelectorAll('a.rasa-zoom'),function(a){return a.offsetParent!==null;});}
+	function show(i){if(!list.length)return;pos=(i+list.length)%list.length;var a=list[pos],img=a.querySelector('img');im.src=a.href;im.alt=img?img.alt:'';
+		var many=list.length>1;prev.hidden=!many;next.hidden=!many;cnt.textContent=many?(pos+1)+' / '+list.length:'';}
+	document.addEventListener('click',function(e){var a=e.target.closest('a.rasa-zoom');if(!a)return;e.preventDefault();list=visible();show(list.indexOf(a));d.showModal();});
+	prev.addEventListener('click',function(e){e.stopPropagation();show(pos-1);});
+	next.addEventListener('click',function(e){e.stopPropagation();show(pos+1);});
+	d.querySelector('.rasa-zoom__close').addEventListener('click',function(){d.close();});
+	d.addEventListener('click',function(e){if(e.target===d)d.close();});
+	d.addEventListener('keydown',function(e){if(e.key==='ArrowLeft'){show(pos-1);}else if(e.key==='ArrowRight'){show(pos+1);}});
+	var x0=null;d.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+	d.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40){show(pos+(dx<0?1:-1));}x0=null;});
+})();
+(function(){
+	// Pills always clickable (also before prices exist); switch the per-variant gallery.
+	var form=document.getElementById('RasaPdpForm');if(!form)return;
+	var varMap=<?php echo wp_json_encode( (object) $rasa_var_map ); ?>;
+	function paint(){
+		form.querySelectorAll('.rasa-pill-radio').forEach(function(r){var l=r.nextElementSibling;if(!l)return;
+			l.style.background=r.checked?'#000':'#f3f3f3';l.style.color=r.checked?'#f3f3f3':'#000';l.style.borderColor=r.checked?'#000':'rgba(0,0,0,0.55)';});
+		var c=form.querySelector('.rasa-pill-radio:checked');if(!c)return;var key=c.value.toLowerCase();
+		var groups=document.querySelectorAll('[data-rasa-group]');
+		if(groups.length){groups.forEach(function(g){g.hidden=(g.getAttribute('data-rasa-group')!==key);});}
+		var vid=document.getElementById('RasaVariationId');if(vid&&varMap[key]&&!vid.value){vid.dataset.rasaFallback=varMap[key];}
+	}
+	form.addEventListener('change',function(e){if(e.target.classList.contains('rasa-pill-radio'))paint();});
+	paint();
+})();
 </script>
 <?php
 get_footer();

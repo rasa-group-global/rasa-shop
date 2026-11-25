@@ -69,7 +69,7 @@ $ps_items_2 = array(
 		),
 	),
 	array(
-		'title'       => 'Moon Delight',
+		'title'       => 'Mood Delight',
 		'img'         => 'S-CB-01.webp',
 		'tag'         => 'notify-mood-delight',
 		'description' => rasa_tr(

@@ -58,32 +58,36 @@ $ps_items_1 = array(
 	),
 );
 
+$rasa_prod_img = RASA_URI . '/assets/products';
 $ps_items_2 = array(
 	array(
-		'title'       => 'Coffee Brew Bag – Sumatra Bhadrika Gayo',
-		'img'         => 'COFFEEBREW3FRONT.webp',
+		'title'       => 'Coffee Brew Bags',
+		'src'         => $rasa_prod_img . '/rk-brew-sumatra-bhadrika-gayo-1-front.jpg',
+		'url'         => home_url( '/product/coffee-brew-bags-5-stueck/' ),
 		'tag'         => 'notify-coffee-brew-bag',
 		'description' => rasa_tr(
-			'Specialty Coffee im praktischen Brew Bag: 100 % Arabica aus dem Gayo-Hochland in Sumatra. Einfach heißes Wasser aufgießen, ziehen lassen und unterwegs oder im Büro vollen Ursprungsgeschmack genießen.',
-			'Specialty coffee in a convenient brew bag: 100% Arabica from the Gayo Highlands of Sumatra. Simply pour hot water, steep, and enjoy full origin flavor on the go or at the office.'
+			'Specialty Coffee aus Indonesien im Brühbeutel – wie Tee aufgießen, ziehen lassen, genießen. 4 Sorten: Sumatra Bhadrika Gayo, Java Nismara Ijen, Peach Valores, Mood Delight.',
+			'Indonesian specialty coffee in a brew bag – steep it like tea and enjoy. 4 coffees: Sumatra Bhadrika Gayo, Java Nismara Ijen, Peach Valores, Mood Delight.'
 		),
 	),
 	array(
-		'title'       => 'Mood Delight',
-		'img'         => 'S-CB-01.webp',
-		'tag'         => 'notify-mood-delight',
+		'title'       => 'Coffee Drip Bags',
+		'src'         => $rasa_prod_img . '/rk-drip-java-nismara-ijen-1-front.jpg',
+		'url'         => home_url( '/product/coffee-drip-bags-5-stueck/' ),
+		'tag'         => 'notify-coffee-drip-bag',
 		'description' => rasa_tr(
-			'Ausgewogene Specialty-Coffee-Kreation für jeden Moment des Tages – weich im Körper, mit warmen Karamell- und Nussnoten und einem angenehm runden Nachklang.',
-			'Balanced specialty coffee creation for any time of day — smooth body with warm caramel and nut notes and a pleasantly round finish.'
+			'Pour-over ohne Equipment: Drip Bag an die Tasse hängen, aufgießen, fertig – frischer Specialty Coffee in 2 Minuten.',
+			'Pour-over without equipment: hang the drip bag on your cup, pour, done – fresh specialty coffee in 2 minutes.'
 		),
 	),
 	array(
 		'title'       => rasa_tr( 'Kaffeekapseln', 'Coffee Capsules' ),
-		'img'         => 'S-CB-02.webp',
+		'src'         => $rasa_prod_img . '/rk-capsule-peach-valores-1-front.jpg',
+		'url'         => home_url( '/product/kaffeekapseln-10-stueck/' ),
 		'tag'         => 'notify-kaffeekapseln',
 		'description' => rasa_tr(
-			'Specialty Coffee auf Knopfdruck: frisch gerösteter indonesischer Kaffee in präzise dosierten Kapseln – volles Aroma, unkompliziert zubereitet.',
-			'Specialty coffee at the touch of a button: freshly roasted Indonesian coffee in precision-dosed capsules — full aroma, effortlessly brewed.'
+			'Indonesischer Specialty Coffee in Kapseln, kompatibel mit Nespresso®* Original Maschinen – 4 Sorten, je 10 Kapseln.',
+			'Indonesian specialty coffee in capsules, compatible with Nespresso®* Original machines – 4 coffees, 10 capsules each.'
 		),
 	),
 );
@@ -109,8 +113,8 @@ $render_spotlight = function ( $id, $items, $align = 'left' ) use ( $sec ) {
 							data-description="<?php echo esc_attr( $it['description'] ); ?>"
 							data-price="" data-url="#<?php echo esc_attr( $notify_id ); ?>" data-variant=""
 							data-has-product="" data-available="" data-coming="1" data-tag="<?php echo esc_attr( $it['tag'] ); ?>">
-							<a href="#<?php echo esc_attr( $notify_id ); ?>" class="ps-slide__link" tabindex="-1">
-								<img src="<?php echo esc_url( $sec . '/' . $it['img'] ); ?>" alt="<?php echo esc_attr( $it['title'] ); ?>" loading="lazy" class="<?php echo 0 === $i ? 'product-spotlight__image' : 'product-spotlight__slide-image'; ?>">
+							<a href="<?php echo esc_url( $it['url'] ?? ( '#' . $notify_id ) ); ?>" class="ps-slide__link" tabindex="-1">
+								<img src="<?php echo esc_url( $it['src'] ?? ( $sec . '/' . $it['img'] ) ); ?>" alt="<?php echo esc_attr( $it['title'] ); ?>" loading="lazy" class="<?php echo 0 === $i ? 'product-spotlight__image' : 'product-spotlight__slide-image'; ?>">
 							</a>
 							<span class="ps-badge"><?php echo esc_html( $coming_lbl ); ?></span>
 						</div>
@@ -130,6 +134,13 @@ $render_spotlight = function ( $id, $items, $align = 'left' ) use ( $sec ) {
 				<h2 class="product-spotlight__title"><a class="ps-title-link"><?php echo esc_html( $items[0]['title'] ); ?></a></h2>
 				<span class="ps-coming-badge"><?php echo esc_html( $coming_lbl ); ?></span>
 				<p class="product-spotlight__description"><?php echo esc_html( $items[0]['description'] ); ?></p>
+				<?php if ( ! empty( $items[0]['url'] ) ) : ?>
+				<p class="rasa-ps-links" style="margin:0 0 1.6rem;display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;font-size:1.4rem;">
+					<?php foreach ( $items as $it ) : if ( empty( $it['url'] ) ) { continue; } ?>
+					<a href="<?php echo esc_url( $it['url'] ); ?>" style="color:inherit;text-decoration:underline;text-underline-offset:.3rem;"><?php echo esc_html( sprintf( rasa_tr( '%s ansehen →', 'View %s →' ), $it['title'] ) ); ?></a>
+					<?php endforeach; ?>
+				</p>
+				<?php endif; ?>
 				<div class="product-spotlight__price" style="display:none"></div>
 				<p class="product-spotlight__subtext ps-buy-only" style="display:none"><?php echo esc_html( rasa_tr( 'inkl. MwSt., zzgl. Versandkosten. Versandkostenfrei ab 59 € in Deutschland.', 'incl. VAT, plus shipping. Free shipping over €59 in Germany.' ) ); ?></p>
 				<div class="product-spotlight__swatches">
@@ -142,7 +153,7 @@ $render_spotlight = function ( $id, $items, $align = 'left' ) use ( $sec ) {
 					<div class="product-spotlight__swatch-list">
 						<?php foreach ( $items as $i => $it ) : ?>
 						<button type="button" class="product-spotlight__swatch product-spotlight__swatch--image<?php echo 0 === $i ? ' product-spotlight__swatch--active' : ''; ?> ps-swatch" data-index="<?php echo (int) $i; ?>" title="<?php echo esc_attr( $it['title'] ); ?>" aria-label="<?php echo esc_attr( $it['title'] ); ?>">
-							<img src="<?php echo esc_url( $sec . '/' . $it['img'] ); ?>" alt="" loading="lazy" width="32" height="32">
+							<img src="<?php echo esc_url( $it['src'] ?? ( $sec . '/' . $it['img'] ) ); ?>" alt="" loading="lazy" width="32" height="32">
 						</button>
 						<?php endforeach; ?>
 					</div>

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Rasa Shop Tools
  * Description: Rasa Kopi shop tools: own online withdrawal function (Widerrufsbutton), supplier order mails with tracking link (Keey / Meramanis), small privacy fixes.
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: Rasa Kopi
  * Requires PHP: 8.1
  * Text Domain: rasa-shop-tools
@@ -15,7 +15,7 @@ final class Rasa_Shop_Tools {
 	const OPT        = 'rasa_shop_tools';
 	const CPT        = 'rasa_withdrawal';
 	const META_SUP   = '_rasa_supplier';
-	const DEFAULT_LOCATIONS = "keey | Keey GmbH (Lager Hagenbüchach) | timur@keey.de\nmeramanis | Meramanis (Rösterei Köln) | \nrasa | Rasa Kopi (Garching, Versand selbst) | shop@rasakopi.coffee";
+	const DEFAULT_LOCATIONS = "keey | Keey GmbH (Lager Langenzenn) | timur@keey.de\nmeramanis | Meramanis (Rösterei Köln) | \nrasa | Rasa Kopi (Garching, Versand selbst) | shop@rasakopi.coffee";
 
 	/** Locations: key => [ 'name' => …, 'email' => … ] from the settings text (one per line: key | name | e-mail). */
 	public static function locations() {
@@ -29,6 +29,8 @@ final class Rasa_Shop_Tools {
 			$out[ $key ] = array(
 				'name'  => $parts[1] ?? $key,
 				'email' => is_email( $parts[2] ?? '' ) ? $parts[2] : '',
+				// Optional 4th field: own return address, lines separated by ";".
+				'return' => implode( "\n", array_filter( array_map( 'trim', explode( ';', $parts[3] ?? '' ) ) ) ),
 			);
 		}
 		return $out;
@@ -77,7 +79,7 @@ final class Rasa_Shop_Tools {
 				'locations'      => self::DEFAULT_LOCATIONS,
 				'default_loc'    => 'keey',
 				'test_mode'      => 1,
-				'return_address' => "Rasa Kopi c/o Keey GmbH\nBräuersdorf 28\n91469 Hagenbüchach",
+				'return_address' => "Rasa Kopi c/o Keey GmbH\nHausener Weg 69\n90579 Langenzenn",
 				'old_link'       => 'https://connect.haendlerbund.de/widerrufsformular/',
 			)
 		);
@@ -135,6 +137,41 @@ final class Rasa_Shop_Tools {
 		return '<div class="rasa-wr-error" role="alert" style="border:1px solid #b3261e;padding:12px;margin:0 0 16px">' . esc_html( $msg ) . '</div>';
 	}
 
+	/**
+	 * Return addresses for an order: one block per storage location that ships items of this order.
+	 * Location without own return address -> default return address. No order -> default only.
+	 */
+	public static function return_blocks( $wc_order ) {
+		$default = (string) self::opt( 'return_address' );
+		$locs    = self::locations();
+		$blocks  = array();
+		if ( $wc_order ) {
+			foreach ( $wc_order->get_items() as $item ) {
+				$sup = self::supplier_for( $item->get_product() );
+				if ( 'none' === $sup ) {
+					continue;
+				}
+				$addr = '' !== ( $locs[ $sup ]['return'] ?? '' ) ? $locs[ $sup ]['return'] : $default;
+				$blocks[ $addr ][] = $item->get_name();
+			}
+		}
+		if ( ! $blocks ) {
+			$blocks[ $default ] = array();
+		}
+		return $blocks;
+	}
+
+	private static function return_text( $blocks ) {
+		if ( 1 === count( $blocks ) ) {
+			return 'Bitte senden Sie die Ware innerhalb von 14 Tagen an:' . "\n" . array_key_first( $blocks );
+		}
+		$t = 'Ihre Bestellung wurde aus verschiedenen Lagern verschickt. Bitte senden Sie die Ware innerhalb von 14 Tagen an die jeweilige Adresse:';
+		foreach ( $blocks as $addr => $items ) {
+			$t .= "\n\n" . implode( ', ', array_unique( $items ) ) . ":\n" . $addr;
+		}
+		return $t;
+	}
+
 	private static function handle_withdrawal() {
 		if ( ! isset( $_POST['rasa_wr_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['rasa_wr_nonce'] ) ), 'rasa_wr' ) ) {
 			return self::err( 'Die Seite war zu lange geöffnet. Bitte laden Sie sie neu und senden Sie das Formular erneut.' );
@@ -176,6 +213,7 @@ final class Rasa_Shop_Tools {
 			$wc_order->add_order_note( "Widerruf über die Online-Widerrufsfunktion erklärt.\n" . implode( "\n", $lines ) );
 		}
 
+		$blocks  = self::return_blocks( $matched ? $wc_order : null );
 		$post_id = wp_insert_post(
 			array(
 				'post_type'    => self::CPT,
@@ -187,11 +225,11 @@ final class Rasa_Shop_Tools {
 
 		$subject = sprintf( 'Eingangsbestätigung Ihres Widerrufs – Bestellung %s – Rasa Kopi', $order );
 		$body    = "Hallo {$name},\n\nwir bestätigen den Eingang Ihres Widerrufs:\n\n" . implode( "\n", $lines )
-			. "\n\nBitte senden Sie die Ware innerhalb von 14 Tagen an:\n" . self::opt( 'return_address' )
+			. "\n\n" . self::return_text( $blocks )
 			. "\n\nDie Kosten der Rücksendung tragen Sie. Wir erstatten den Kaufpreis wie in unserer Widerrufsbelehrung beschrieben: " . home_url( '/widerrufsbelehrung/' )
 			. "\n\nViele Grüße\nIhr Rasa Kopi Team\n\nRasa Kopi – Inh. Osman Gedik · Jochbergweg 10 · 85748 Garching · " . self::opt( 'copy_to' );
 		$sent_customer = wp_mail( $email, $subject, $body );
-		wp_mail( self::opt( 'copy_to' ), '[Widerruf] ' . $order . ' – ' . $name, implode( "\n", $lines ) . "\nBestellung zugeordnet: " . ( $matched ? 'ja' : 'nein' ) . "\nBestätigung an Kunden gesendet: " . ( $sent_customer ? 'ja' : 'NEIN – bitte manuell bestätigen' ) . "\nEintrag: " . admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' ) );
+		wp_mail( self::opt( 'copy_to' ), '[Widerruf] ' . $order . ' – ' . $name, implode( "\n", $lines ) . "\nBestellung zugeordnet: " . ( $matched ? 'ja' : 'nein' ) . "\nBestätigung an Kunden gesendet: " . ( $sent_customer ? 'ja' : 'NEIN – bitte manuell bestätigen' ) . ( $matched ? '' : "\nACHTUNG: Bestellung nicht zugeordnet – Kunde hat die Standard-Rücksendeadresse erhalten. Bei Partnerware die richtige Adresse nachsenden." ) . "\nEintrag: " . admin_url( 'post.php?post=' . (int) $post_id . '&action=edit' ) );
 
 		$html  = '<div class="rasa-wr-ok" role="status" style="border:1px solid #2e7d32;padding:16px;margin:0 0 16px">';
 		$html .= '<p><strong>Vielen Dank. Ihr Widerruf ist bei uns eingegangen.</strong></p><p>';
@@ -199,7 +237,7 @@ final class Rasa_Shop_Tools {
 			$html .= esc_html( $l ) . '<br>';
 		}
 		$html .= '</p><p>' . ( $sent_customer ? 'Eine Eingangsbestätigung haben wir an ' . esc_html( $email ) . ' gesendet.' : 'Bitte speichern oder drucken Sie diese Seite als Bestätigung.' ) . '</p>';
-		$html .= '<p>Rücksendeadresse:<br>' . nl2br( esc_html( self::opt( 'return_address' ) ) ) . '</p></div>';
+		$html .= '<p>' . nl2br( esc_html( self::return_text( $blocks ) ) ) . '</p></div>';
 		return $html;
 	}
 
@@ -482,13 +520,13 @@ final class Rasa_Shop_Tools {
 		};
 		$row( 'Testmodus', '<label><input type="checkbox" name="test_mode" value="1" ' . checked( $o['test_mode'], 1, false ) . '> Versandaufträge nur an die Kopie-Adresse senden (nicht an Lieferanten)</label>' );
 		$row( 'Kopie an', '<input type="email" class="regular-text" name="copy_to" value="' . esc_attr( $o['copy_to'] ) . '">' );
-		$row( 'Lagerorte', '<textarea name="locations" rows="6" class="large-text code">' . esc_textarea( $o['locations'] ) . '</textarea><p class="description">Eine Zeile pro Lagerort: <code>kürzel | Name | E-Mail für Versandaufträge</code>. Neue Orte einfach als neue Zeile ergänzen. Kürzel nicht mehr ändern, wenn Produkte zugeordnet sind.</p>' );
+		$row( 'Lagerorte', '<textarea name="locations" rows="6" class="large-text code">' . esc_textarea( $o['locations'] ) . '</textarea><p class="description">Eine Zeile pro Lagerort: <code>kürzel | Name | E-Mail für Versandaufträge | Rücksendeadresse</code>. Die Rücksendeadresse ist optional, Zeilen mit <code>;</code> trennen (z. B. <code>Meramanis GmbH; Musterstr. 1; 50667 Köln</code>). Ohne eigene Adresse gilt die Standard-Rücksendeadresse. Neue Orte einfach als neue Zeile ergänzen. Kürzel nicht mehr ändern, wenn Produkte zugeordnet sind.</p>' );
 		$sel = '';
 		foreach ( self::locations() as $k => $l ) {
 			$sel .= '<option value="' . esc_attr( $k ) . '" ' . selected( $o['default_loc'], $k, false ) . '>' . esc_html( $l['name'] ) . '</option>';
 		}
 		$row( 'Standard-Lagerort', '<select name="default_loc">' . $sel . '</select><p class="description">Gilt für alle Produkte ohne eigene Zuordnung.</p>' );
-		$row( 'Rücksendeadresse', '<textarea name="return_address" rows="3" class="regular-text">' . esc_textarea( $o['return_address'] ) . '</textarea>' );
+		$row( 'Standard-Rücksendeadresse', '<textarea name="return_address" rows="3" class="regular-text">' . esc_textarea( $o['return_address'] ) . '</textarea><p class="description">Für alle Lagerorte ohne eigene Rücksendeadresse. Der Kunde bekommt nach dem Widerruf pro Lager die passende Adresse.</p>' );
 		echo '</table>';
 		submit_button( 'Speichern' );
 		echo '</form><hr><h2>E-Mail-Versand testen</h2><form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';

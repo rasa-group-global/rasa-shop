@@ -137,6 +137,14 @@ while ( have_posts() ) :
 						<?php endif; ?>
 					</form>
 
+					<!-- Trust row (conversion): shipping, withdrawal, payment, origin -->
+					<ul class="rasa-trust" role="list">
+						<li><svg aria-hidden="true" viewBox="0 -960 960 960"><path d="M240-160q-50 0-85-35t-35-85H40v-440q0-33 23.5-56.5T120-800h560v160h120l120 160v200h-80q0 50-35 85t-85 35q-50 0-85-35t-35-85H360q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T280-280q0-17-11.5-28.5T240-320q-17 0-28.5 11.5T200-280q0 17 11.5 28.5T240-240ZM120-360h32q17-18 39-29t49-11q27 0 49 11t39 29h272v-360H120v360Zm600 120q17 0 28.5-11.5T760-280q0-17-11.5-28.5T720-320q-17 0-28.5 11.5T680-280q0 17 11.5 28.5T720-240Zm-40-200h170l-90-120h-80v120Z"/></svg><span><?php echo esc_html( rasa_tr( 'Kostenloser Versand ab 59 €', 'Free shipping over €59' ) ); ?></span></li>
+						<li><svg aria-hidden="true" viewBox="0 -960 960 960"><path d="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z"/></svg><span><?php echo esc_html( rasa_tr( '14 Tage Widerrufsrecht', '14-day right of withdrawal' ) ); ?></span></li>
+						<li><svg aria-hidden="true" viewBox="0 -960 960 960"><path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm240-120q33 0 56.5-23.5T560-360q0-33-23.5-56.5T480-440q-33 0-56.5 23.5T400-360q0 33 23.5 56.5T480-280ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80Z"/></svg><span><?php echo esc_html( rasa_tr( 'Sicher bezahlen', 'Secure payment' ) ); ?></span></li>
+						<li><svg aria-hidden="true" viewBox="0 -960 960 960"><path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-69.5-178.5T480-800q-101 0-170.5 69.5T240-552q0 71 59 162.5T480-186Zm0 106Q319-217 239.5-334.5T160-552q0-150 96.5-239T480-880q127 0 223.5 89T800-552q0 100-79.5 217.5T480-80Z"/></svg><span><?php echo esc_html( rasa_tr( 'Versand aus Deutschland', 'Ships from Germany' ) ); ?></span></li>
+					</ul>
+
 					<!-- EU Statutory Warranty Notice -->
 					<div class="rasa-eu-notice" style="margin-top:2.4rem;padding-top:2rem;border-top:1px solid rgba(18,18,18,.12);">
 						<p style="margin:0 0 1.2rem;font-size:1.4rem;font-weight:600;color:rgba(0,0,0,0.75);"><?php echo esc_html( rasa_tr( 'Gesetzliche Gewährleistung', 'Statutory Warranty' ) ); ?></p>
@@ -162,6 +170,46 @@ while ( have_posts() ) :
 			</div>
 		</div>
 	</section>
+
+	<?php
+	// "Passt dazu" (conversion): cross-sells/upsells first, then products from the same category.
+	$rasa_pair_ids = array_unique( array_merge( $product->get_cross_sell_ids(), $product->get_upsell_ids() ) );
+	if ( count( $rasa_pair_ids ) < 4 ) {
+		$rasa_cat_ids = $product->get_category_ids();
+		if ( $rasa_cat_ids ) {
+			$rasa_more = wc_get_products( array(
+				'status'   => 'publish',
+				'limit'    => 8,
+				'exclude'  => array_merge( array( $product->get_id() ), $rasa_pair_ids ),
+				'category' => array_filter( array_map( function ( $id ) {
+					$t = get_term( $id, 'product_cat' );
+					return ( $t && ! is_wp_error( $t ) ) ? $t->slug : '';
+				}, $rasa_cat_ids ) ),
+				'return'   => 'ids',
+			) );
+			$rasa_pair_ids = array_merge( $rasa_pair_ids, $rasa_more );
+		}
+	}
+	$rasa_pair = array_filter( array_map( 'wc_get_product', array_slice( $rasa_pair_ids, 0, 4 ) ), function ( $p ) {
+		return $p && 'publish' === $p->get_status() && $p->is_visible();
+	} );
+	if ( $rasa_pair ) :
+		?>
+	<section class="page-width rasa-pair" aria-labelledby="RasaPairTitle">
+		<h2 id="RasaPairTitle" class="rasa-pair__title"><?php echo esc_html( rasa_tr( 'Passt dazu', 'Goes well with' ) ); ?></h2>
+		<ul class="rasa-pair__grid" role="list">
+			<?php foreach ( $rasa_pair as $rp ) : ?>
+			<li class="rasa-pair__item">
+				<a href="<?php echo esc_url( $rp->get_permalink() ); ?>" class="rasa-pair__link">
+					<span class="rasa-pair__media"><?php echo wp_kses_post( $rp->get_image( 'woocommerce_thumbnail', array( 'loading' => 'lazy' ) ) ); ?></span>
+					<span class="rasa-pair__name"><?php echo esc_html( $rp->get_name() ); ?></span>
+					<span class="rasa-pair__price"><?php echo wp_kses_post( $rp->get_price_html() ); ?></span>
+				</a>
+			</li>
+			<?php endforeach; ?>
+		</ul>
+	</section>
+	<?php endif; ?>
 
 	<?php if ( $is_variable && ! empty( $variations ) ) : ?>
 	<script>
@@ -215,6 +263,20 @@ while ( have_posts() ) :
 endwhile;
 
 ?>
+<style>
+.rasa-trust{list-style:none;margin:2rem 0 0;padding:1.6rem 0 0;border-top:1px solid rgba(18,18,18,.12);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem 1.6rem}
+.rasa-trust li{display:flex;align-items:center;gap:.8rem;font-size:1.35rem;line-height:1.35;color:rgba(0,0,0,.8)}
+.rasa-trust svg{flex:0 0 2.2rem;width:2.2rem;height:2.2rem;fill:currentColor}
+.rasa-pair{padding-top:8px;padding-bottom:56px}
+.rasa-pair__title{font-size:2.4rem;margin:0 0 2rem}
+.rasa-pair__grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.6rem}
+@media (min-width:750px){.rasa-pair__grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:2.4rem}}
+.rasa-pair__link{display:flex;flex-direction:column;gap:.6rem;color:inherit;text-decoration:none}
+.rasa-pair__media img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;background:#f3f3f3}
+.rasa-pair__name{font-size:1.5rem;line-height:1.4}
+.rasa-pair__link:hover .rasa-pair__name{text-decoration:underline;text-underline-offset:.3rem}
+.rasa-pair__price{font-size:1.4rem;color:rgba(0,0,0,.75)}
+</style>
 <dialog id="RasaZoom" aria-label="Bild" style="padding:0;border:0;max-width:96vw;max-height:96vh;background:transparent;">
 	<button type="button" class="rasa-zoom__close" aria-label="Schließen" style="position:absolute;top:8px;right:8px;width:44px;height:44px;border-radius:50%;border:0;background:#fff;font-size:24px;line-height:44px;cursor:pointer;">&times;</button>
 	<img alt="" style="display:block;max-width:96vw;max-height:96vh;width:auto;height:auto;object-fit:contain;">

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Rasa Shop Tools
  * Description: Rasa Kopi shop tools: own online withdrawal function (Widerrufsbutton), supplier order mails with tracking link (Keey / Meramanis), small privacy fixes.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Rasa Kopi
  * Requires PHP: 8.1
  * Text Domain: rasa-shop-tools
@@ -520,7 +520,19 @@ final class Rasa_Shop_Tools {
 		};
 		$row( 'Testmodus', '<label><input type="checkbox" name="test_mode" value="1" ' . checked( $o['test_mode'], 1, false ) . '> Versandaufträge nur an die Kopie-Adresse senden (nicht an Lieferanten)</label>' );
 		$row( 'Kopie an', '<input type="email" class="regular-text" name="copy_to" value="' . esc_attr( $o['copy_to'] ) . '">' );
-		$row( 'Lagerorte', '<textarea name="locations" rows="6" class="large-text code">' . esc_textarea( $o['locations'] ) . '</textarea><p class="description">Eine Zeile pro Lagerort: <code>kürzel | Name | E-Mail für Versandaufträge | Rücksendeadresse</code>. Die Rücksendeadresse ist optional, Zeilen mit <code>;</code> trennen (z. B. <code>Meramanis GmbH; Musterstr. 1; 50667 Köln</code>). Ohne eigene Adresse gilt die Standard-Rücksendeadresse. Neue Orte einfach als neue Zeile ergänzen. Kürzel nicht mehr ändern, wenn Produkte zugeordnet sind.</p>' );
+		$t  = '<table class="widefat striped rasa-locs" style="max-width:1100px"><thead><tr><th style="width:120px">Kürzel</th><th>Name</th><th>E-Mail für Versandaufträge</th><th>Eigene Rücksendeadresse (optional)</th></tr></thead><tbody>';
+		$i  = 0;
+		foreach ( self::locations() + array( '' => array( 'name' => '', 'email' => '', 'return' => '' ) ) as $k => $l ) {
+			$n  = 'loc[' . $i++ . ']';
+			$t .= '<tr><td>' . ( '' === $k
+					? '<input type="text" name="' . $n . '[key]" placeholder="neu, z. B. roesttrommel" style="width:100%">'
+					: '<code>' . esc_html( $k ) . '</code><input type="hidden" name="' . $n . '[key]" value="' . esc_attr( $k ) . '">' )
+				. '</td><td><input type="text" name="' . $n . '[name]" value="' . esc_attr( $l['name'] ) . '" style="width:100%"></td>'
+				. '<td><input type="email" name="' . $n . '[email]" value="' . esc_attr( $l['email'] ) . '" style="width:100%"></td>'
+				. '<td><textarea name="' . $n . '[return]" rows="3" style="width:100%" placeholder="leer = Standard-Rücksendeadresse">' . esc_textarea( $l['return'] ?? '' ) . '</textarea></td></tr>';
+		}
+		$t .= '</tbody></table><p class="description">Letzte Zeile = neuer Lagerort. Kürzel kann man später nicht ändern (Produkte hängen daran). Name leeren = Lagerort löschen.</p>';
+		$row( 'Lagerorte', $t );
 		$sel = '';
 		foreach ( self::locations() as $k => $l ) {
 			$sel .= '<option value="' . esc_attr( $k ) . '" ' . selected( $o['default_loc'], $k, false ) . '>' . esc_html( $l['name'] ) . '</option>';
@@ -536,6 +548,26 @@ final class Rasa_Shop_Tools {
 		echo '</form><p>Widerrufsformular: Shortcode <code>[rasa_widerruf]</code> auf der Seite /vertrag-widerrufen/. Eingänge: WooCommerce ▸ Widerrufe.</p></div>';
 	}
 
+	/** Table rows -> stored text (key | name | e-mail | return lines split by ;). Old textarea still accepted. */
+	private static function locations_from_post() {
+		if ( ! isset( $_POST['loc'] ) || ! is_array( $_POST['loc'] ) ) {
+			return sanitize_textarea_field( wp_unslash( $_POST['locations'] ?? self::opt( 'locations' ) ) );
+		}
+		$clean = fn( $v ) => trim( str_replace( array( '|', ';' ), array( '/', ',' ), sanitize_text_field( $v ) ) );
+		$lines = array();
+		foreach ( wp_unslash( $_POST['loc'] ) as $r ) {
+			$key  = sanitize_key( $r['key'] ?? '' );
+			$name = $clean( $r['name'] ?? '' );
+			if ( '' === $key || 'none' === $key || '' === $name ) {
+				continue;
+			}
+			$email  = sanitize_email( $r['email'] ?? '' );
+			$return = implode( '; ', array_filter( array_map( $clean, preg_split( '/\r?\n/', (string) ( $r['return'] ?? '' ) ) ) ) );
+			$lines[ $key ] = rtrim( "$key | $name | $email | $return", ' |' );
+		}
+		return implode( "\n", $lines );
+	}
+
 	public static function admin_save() {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			wp_die( 'no' );
@@ -546,7 +578,7 @@ final class Rasa_Shop_Tools {
 			array(
 				'test_mode'      => empty( $_POST['test_mode'] ) ? 0 : 1,
 				'copy_to'        => sanitize_email( wp_unslash( $_POST['copy_to'] ?? '' ) ),
-				'locations'      => sanitize_textarea_field( wp_unslash( $_POST['locations'] ?? '' ) ),
+				'locations'      => self::locations_from_post(),
 				'default_loc'    => sanitize_key( wp_unslash( $_POST['default_loc'] ?? 'keey' ) ),
 				'return_address' => sanitize_textarea_field( wp_unslash( $_POST['return_address'] ?? '' ) ),
 				'old_link'       => self::opt( 'old_link' ),
